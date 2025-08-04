@@ -1,11 +1,11 @@
+import { AppSidebar } from "@/components/custom/App-Sidebar"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { Sidebar } from "@/components/ui/sidebar"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar />
-      <main>
+      <AppSidebar />
+      <main className=" overflow-hidden">
         <SidebarTrigger />
         {children}
       </main>
