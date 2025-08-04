@@ -1,8 +1,11 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+'use client';
+
+import { Home, Settings } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -10,6 +13,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Button } from "../ui/button"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 // Menu items.
 const items = [
@@ -19,21 +25,6 @@ const items = [
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
     title: "Settings",
     url: "#",
     icon: Settings,
@@ -41,12 +32,15 @@ const items = [
 ]
 
 export function AppSidebar() {
+
+  const router = useRouter();
+
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Sample Sidebar</SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className="flex flex-col justify-between flex-1 h-full">
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
@@ -59,9 +53,22 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
+
+            <SidebarFooter className=" bg-red-300">
+              <Button
+                variant={'destructive'}
+                onClick={() => {
+                  toast.success("Logout Success");
+                  router.push("/login");
+                }}
+              >
+                Logout
+              </Button>
+            </SidebarFooter>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+
   )
 }
