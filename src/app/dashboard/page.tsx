@@ -35,14 +35,10 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -58,94 +54,150 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 // Icon and Style imports
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // Sample Table Data
-const data: Payment[] = [
-    {
-        id: "m5gr84i9",
-        amount: 316,
-        status: "success",
-        ticket: "ken99@example.com",
-        problem: "Network lag"
-    },
-    {
-        id: "3u1reuv4",
-        amount: 242,
-        status: "success",
-        ticket: "Abe45@example.com",
-        problem: "Payment lag"
-    },
-    {
-        id: "derv1ws0",
-        amount: 837,
-        status: "processing",
-        ticket: "Monserrat44@example.com",
-        problem: "Firewall issue"
-    },
-    {
-        id: "5kma53ae",
-        amount: 874,
-        status: "success",
-        ticket: "Silas22@example.com",
-        problem: "Wifi lag"
-    },
-    {
-        id: "bhqecj4p",
-        amount: 721,
-        status: "failed",
-        ticket: "carmella@example.com",
-        problem: "Network lag"
-    },
-]
-
 export type Payment = {
     id: string
-    amount: number
-    status: "pending" | "processing" | "success" | "failed"
+    priority: 'high' | 'medium' | 'low'
+    status: 'open' | 'in progress' | 'closed'
     ticket: string,
     problem: string
 }
 
-export const columns: ColumnDef<Payment>[] = [
+const data: Payment[] = [
     {
-        id: "select",
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && "indeterminate")
-                }
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
+        id: "m5gr84i9",
+        priority: 'high',
+        status: "closed",
+        ticket: "Ticket1",
+        problem: "Network lag"
     },
     {
+        id: "3u1reuv4",
+        priority: 'low',
+        status: "in progress",
+        ticket: "Ticket2",
+        problem: "Payment lag"
+    },
+    {
+        id: "derv1ws0",
+        priority: 'medium',
+        status: "in progress",
+        ticket: "Ticket3",
+        problem: "Firewall issue"
+    },
+    {
+        id: "5kma53ae",
+        priority: 'high',
+        status: "open",
+        ticket: "Ticket4",
+        problem: "Wifi lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+    {
+        id: "bhqecj4p",
+        priority: 'low',
+        status: "closed",
+        ticket: "Ticket5",
+        problem: "Network lag"
+    },
+]
+
+export const columns: ColumnDef<Payment>[] = [
+    // {
+    //     id: "select",
+    //     header: ({ table }) => (
+    //         <Checkbox
+    //             checked={
+    //                 table.getIsAllPageRowsSelected() ||
+    //                 (table.getIsSomePageRowsSelected() && "indeterminate")
+    //             }
+    //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+    //             aria-label="Select all"
+    //         />
+    //     ),
+    //     cell: ({ row }) => (
+    //         <Checkbox
+    //             checked={row.getIsSelected()}
+    //             onCheckedChange={(value) => row.toggleSelected(!!value)}
+    //             aria-label="Select row"
+    //         />
+    //     ),
+    //     enableSorting: false,
+    //     enableHiding: false,
+    // },
+    {
         accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("status")}</div>
-        ),
+        header: () => <div className="text-start">Status</div>,
+        cell: ({ row }) => {
+            const status: string = row.getValue("status");
+            return <div className={cn(`text-left font-medium`, {
+                'text-red-500': status === 'open',
+                'text-yellow-500': status === 'in progress',
+                'text-green-500': status === 'closed',
+            })}>{status}</div>
+        },
     },
     {
         accessorKey: "ticket",
         header: ({ column }) => {
             return (
                 <Button
+                    className="w-fit text-left"
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    ticket
+                    Ticket
                     <ArrowUpDown />
                 </Button>
             )
@@ -157,10 +209,11 @@ export const columns: ColumnDef<Payment>[] = [
         header: ({ column }) => {
             return (
                 <Button
+                    className="w-fit text-start"
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    problem
+                    Problem
                     <ArrowUpDown />
                 </Button>
             )
@@ -168,50 +221,52 @@ export const columns: ColumnDef<Payment>[] = [
         cell: ({ row }) => <div className=" capitalize">{row.getValue("problem")}</div>,
     },
     {
-        accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
+        accessorKey: "priority",
+        header: () => <div className="text-left">Priority</div>,
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("amount"))
-
-            // Format the amount as a dollar amount
-            const formatted = new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-            }).format(amount)
-
-            return <div className="text-right font-medium">{formatted}</div>
+            const priority: string = row.getValue("priority");
+            return <div className={cn(`text-left font-medium`, {
+                'text-red-500': priority === 'high',
+                'text-yellow-500': priority === 'medium',
+                'text-green-500': priority === 'low',
+            })}>{priority}</div>
         },
     },
-    {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-            const payment = row.original
+    // {
+    //     id: "actions",
+    //     enableHiding: false,
+    //     cell: ({ row }) => {
+    //         const payment = row.original
 
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant={'ghost'} className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(payment.id)}
-                        >
-                            Copy payment ID
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )
-        },
-    },
+    //         return (
+    //             <DropdownMenu>
+    //                 <DropdownMenuTrigger asChild>
+    //                     <Button variant={'ghost'} className="h-8 w-8 p-0">
+    //                         <span className="sr-only">Open menu</span>
+    //                         <MoreHorizontal />
+    //                     </Button>
+    //                 </DropdownMenuTrigger>
+    //                 <DropdownMenuContent align="end">
+    //                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+    //                     <DropdownMenuItem
+    //                         onClick={() => navigator.clipboard.writeText(payment.id)}
+    //                     >
+    //                         Copy payment ID
+    //                     </DropdownMenuItem>
+    //                     <DropdownMenuSeparator />
+    //                     <DropdownMenuItem>View customer</DropdownMenuItem>
+    //                     <DropdownMenuItem>View payment details</DropdownMenuItem>
+    //                 </DropdownMenuContent>
+    //             </DropdownMenu>
+    //         )
+    //     },
+    // },
 ]
+
+// Get the Ticket Data
+const getData = async () => {
+    // Fetch data from an API or database
+}
 
 export default function Page() {
     const [sorting, setSorting] = React.useState<SortingState>([])
@@ -242,7 +297,7 @@ export default function Page() {
     })
 
     return (
-        <main className="flex-1 h-full items-center justify-center px-[10vw] max-md:px-[5vw] space-y-4">
+        <main className="flex-1 h-full items-center justify-center px-[5vw] max-md:px-[3.5vw]">
             <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
                 <h1 className=" text-5xl max-lg:text-3xl font-bold">
                     Ticket Table
@@ -378,7 +433,7 @@ export default function Page() {
                                 <TableRow>
                                     <TableCell
                                         colSpan={columns.length}
-                                        className="h-24 text-center"
+                                        className="h-24 p-2 text-center"
                                     >
                                         No results.
                                     </TableCell>
@@ -388,10 +443,10 @@ export default function Page() {
                     </Table>
                 </div>
                 <div className="flex items-center justify-end space-x-2 py-4">
-                    <div className="flex-1 text-sm text-muted-foreground">
+                    {/* <div className="flex-1 text-sm text-muted-foreground">
                         {table.getFilteredSelectedRowModel().rows.length} of{" "}
                         {table.getFilteredRowModel().rows.length} row(s) selected.
-                    </div>
+                    </div> */}
                     <div className="space-x-2">
                         <Button
                             variant="outline"
