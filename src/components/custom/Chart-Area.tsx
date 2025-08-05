@@ -7,7 +7,6 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -145,7 +144,7 @@ export function ChartArea() {
 
     const filteredData = React.useMemo(() => {
         const data = chartField === "priority" ? priority : status;
-        const referenceDate = new Date("2025-08-05");
+        const referenceDate = new Date();
         let daysToSubtract = 90;
 
         if (timeRange === "30d") {
@@ -168,300 +167,296 @@ export function ChartArea() {
     }, [filteredData])
 
     return (
-        <Card className="@container/card">
-            <CardHeader className="relative">
-                <CardTitle>Total Tickets</CardTitle>
-                <CardDescription>
-                    <span className="@[540px]/card:block hidden">
-                        Total for the last 3 months
-                    </span>
-                    <span className="@[540px]/card:hidden">Last 3 months</span>
-                </CardDescription>
-                <div className="absolute w-fit h-fit flex flex-col justify-center items-end gap-1.5 p-2 mb-2 right-4 top-4">
-                    <div>
-                        <ToggleGroup
-                            type="single"
-                            value={chartField}
-                            onValueChange={(value) => setChartField(value as "status" | "priority")}
-                            variant="outline"
-                            className="@[767px]/card:flex hidden"
-                        >
-                            <ToggleGroupItem value="priority" className="h-8 px-2.5">
-                                Priority
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="status" className="h-8 px-2.5">
-                                Status
-                            </ToggleGroupItem>
-                        </ToggleGroup>
-                        <Select value={chartField} onValueChange={(value) => setChartField(value as "status" | "priority")}>
-                            <SelectTrigger
-                                className="@[767px]/card:hidden flex w-40"
-                                aria-label="Select field"
+        <section className=" px-[2.5vw]">
+            <Card className="@container/card">
+                <CardHeader className="relative">
+                    <CardTitle className=" max-md:text-center">Total Tickets</CardTitle>
+                    <div className="absolute w-fit h-fit flex flex-col max-md:flex-row justify-center items-end gap-1.5 p-2 mb-2 right-2 max-md:right-4 top-[-5px] max-md:top-4">
+                        <div>
+                            <ToggleGroup
+                                type="single"
+                                value={chartField}
+                                onValueChange={(value) => setChartField(value as "status" | "priority")}
+                                variant="outline"
+                                className="@[767px]/card:flex hidden"
                             >
-                                <SelectValue placeholder="Last 3 months" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                                <SelectItem value="priority" className="rounded-lg">
+                                <ToggleGroupItem value="priority" className="h-8 px-2.5 cursor-pointer">
                                     Priority
-                                </SelectItem>
-                                <SelectItem value="status" className="rounded-lg">
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value="status" className="h-8 px-2.5 cursor-pointer">
                                     Status
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <ToggleGroup
-                            type="single"
-                            value={timeRange}
-                            onValueChange={setTimeRange}
-                            variant="outline"
-                            className="@[767px]/card:flex hidden"
-                        >
-                            <ToggleGroupItem value="90d" className="h-8 px-2.5">
-                                Last 3 months
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="30d" className="h-8 px-2.5">
-                                Last 30 days
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="7d" className="h-8 px-2.5">
-                                Last 7 days
-                            </ToggleGroupItem>
-                        </ToggleGroup>
-                        <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger
-                                className="@[767px]/card:hidden flex w-40"
-                                aria-label="Select a value"
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                            <Select value={chartField} onValueChange={(value) => setChartField(value as "status" | "priority")}>
+                                <SelectTrigger
+                                    className="@[767px]/card:hidden flex w-40"
+                                    aria-label="Select field"
+                                >
+                                    <SelectValue placeholder="Last 3 months" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem value="priority" className="rounded-lg">
+                                        Priority
+                                    </SelectItem>
+                                    <SelectItem value="status" className="rounded-lg">
+                                        Status
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <ToggleGroup
+                                type="single"
+                                value={timeRange}
+                                onValueChange={setTimeRange}
+                                variant="outline"
+                                className="@[767px]/card:flex hidden"
                             >
-                                <SelectValue placeholder="Last 3 months" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                                <SelectItem value="90d" className="rounded-lg">
-                                    Last 3 months
-                                </SelectItem>
-                                <SelectItem value="30d" className="rounded-lg">
+                                <ToggleGroupItem value="90d" className="h-8 px-2.5 cursor-pointer">
+                                    Last 90 days
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value="30d" className="h-8 px-2.5 cursor-pointer">
                                     Last 30 days
-                                </SelectItem>
-                                <SelectItem value="7d" className="rounded-lg">
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value="7d" className="h-8 px-2.5 cursor-pointer">
                                     Last 7 days
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                            <Select value={timeRange} onValueChange={setTimeRange}>
+                                <SelectTrigger
+                                    className="@[767px]/card:hidden flex w-40"
+                                    aria-label="Select a value"
+                                >
+                                    <SelectValue placeholder="Last 3 months" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem value="90d" className="rounded-lg">
+                                        Last 90 days
+                                    </SelectItem>
+                                    <SelectItem value="30d" className="rounded-lg">
+                                        Last 30 days
+                                    </SelectItem>
+                                    <SelectItem value="7d" className="rounded-lg">
+                                        Last 7 days
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                </div>
-            </CardHeader>
-            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                <ChartContainer
-                    config={chartConfig}
-                    className="aspect-auto h-[250px] w-full"
-                >
-                    {chartField === "status" ? (
-                        <AreaChart data={filteredData}>
-                            <defs>
-                                <linearGradient id="fillOpen" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.OPEN.color}
-                                        stopOpacity={1.0}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.OPEN.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
+                </CardHeader>
+                <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+                    <ChartContainer
+                        config={chartConfig}
+                        className="aspect-auto h-[250px] w-full"
+                    >
+                        {chartField === "status" ? (
+                            <AreaChart data={filteredData}>
+                                <defs>
+                                    <linearGradient id="fillOpen" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.OPEN.color}
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.OPEN.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
 
-                                <linearGradient id="fillInProgress" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.IN_PROGRESS.color}
-                                        stopOpacity={1.0}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.IN_PROGRESS.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
+                                    <linearGradient id="fillInProgress" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.IN_PROGRESS.color}
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.IN_PROGRESS.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
 
-                                <linearGradient id="fillResolved" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.RESOLVED.color}
-                                        stopOpacity={1.0}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.RESOLVED.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
+                                    <linearGradient id="fillResolved" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.RESOLVED.color}
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.RESOLVED.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
 
-                                <linearGradient id="fillClosed" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.CLOSED.color}
-                                        stopOpacity={0.8}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.CLOSED.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="date"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
-                                minTickGap={32}
-                                tickFormatter={(value) => {
-                                    const date = new Date(value)
-                                    return date.toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                    })
-                                }}
-                            />
-                            <ChartTooltip
-                                cursor={false}
-                                content={
-                                    <ChartTooltipContent
-                                        labelFormatter={(value) => {
-                                            return new Date(value).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                            })
-                                        }}
-                                        indicator="dot"
-                                    />
-                                }
-                            />
-                            <Area
-                                dataKey="OPEN"
-                                type="natural"
-                                fill="url(#fillOpen)"
-                                stroke={chartConfig.OPEN.color}
-                                stackId="a"
-                            />
-                            <Area
-                                dataKey="IN_PROGRESS"
-                                type="natural"
-                                fill="url(#fillInProgress)"
-                                stroke={chartConfig.IN_PROGRESS.color}
-                                stackId="a"
-                            />
-                            <Area
-                                dataKey="RESOLVED"
-                                type="natural"
-                                fill="url(#fillResolved)"
-                                stroke={chartConfig.RESOLVED.color}
-                                stackId="a"
-                            />
-                            <Area
-                                dataKey="CLOSED"
-                                type="natural"
-                                fill="url(#fillClosed)"
-                                stroke={chartConfig.CLOSED.color}
-                                stackId="a"
-                            />
-                        </AreaChart>) : (
-                        <AreaChart data={filteredData}>
-                            <defs>
-                                <linearGradient id="fillLow" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.LOW.color}
-                                        stopOpacity={1.0}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.LOW.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
-                                <linearGradient id="fillMedium" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.MEDIUM.color}
-                                        stopOpacity={1.0}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.MEDIUM.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
-                                <linearGradient id="fillHigh" x1="0" y1="0" x2="0" y2="1">
-                                    <stop
-                                        offset="5%"
-                                        stopColor={chartConfig.HIGH.color}
-                                        stopOpacity={1.0}
-                                    />
-                                    <stop
-                                        offset="95%"
-                                        stopColor={chartConfig.HIGH.color}
-                                        stopOpacity={0.1}
-                                    />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="date"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
-                                minTickGap={32}
-                                tickFormatter={(value) => {
-                                    const date = new Date(value)
-                                    return date.toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                    })
-                                }}
-                            />
-                            <ChartTooltip
-                                cursor={false}
-                                content={
-                                    <ChartTooltipContent
-                                        labelFormatter={(value) => {
-                                            return new Date(value).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                            })
-                                        }}
-                                        indicator="dot"
-                                    />
-                                }
-                            />
-                            <Area
-                                dataKey="HIGH"
-                                type="natural"
-                                fill="url(#fillHigh)"
-                                stroke={chartConfig.HIGH.color}
-                                stackId="a"
-                            />
-                            <Area
-                                dataKey="MEDIUM"
-                                type="natural"
-                                fill="url(#fillMedium)"
-                                stroke={chartConfig.MEDIUM.color}
-                                stackId="a"
-                            />
-                            <Area
-                                dataKey="LOW"
-                                type="natural"
-                                fill="url(#fillLow)"
-                                stroke={chartConfig.LOW.color}
-                                stackId="a"
-                            />
+                                    <linearGradient id="fillClosed" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.CLOSED.color}
+                                            stopOpacity={0.8}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.CLOSED.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={8}
+                                    minTickGap={32}
+                                    tickFormatter={(value) => {
+                                        const date = new Date(value)
+                                        return date.toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                        })
+                                    }}
+                                />
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={
+                                        <ChartTooltipContent
+                                            labelFormatter={(value) => {
+                                                return new Date(value).toLocaleDateString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })
+                                            }}
+                                            indicator="dot"
+                                        />
+                                    }
+                                />
+                                <Area
+                                    dataKey="OPEN"
+                                    type="natural"
+                                    fill="url(#fillOpen)"
+                                    stroke={chartConfig.OPEN.color}
+                                    stackId="a"
+                                />
+                                <Area
+                                    dataKey="IN_PROGRESS"
+                                    type="natural"
+                                    fill="url(#fillInProgress)"
+                                    stroke={chartConfig.IN_PROGRESS.color}
+                                    stackId="a"
+                                />
+                                <Area
+                                    dataKey="RESOLVED"
+                                    type="natural"
+                                    fill="url(#fillResolved)"
+                                    stroke={chartConfig.RESOLVED.color}
+                                    stackId="a"
+                                />
+                                <Area
+                                    dataKey="CLOSED"
+                                    type="natural"
+                                    fill="url(#fillClosed)"
+                                    stroke={chartConfig.CLOSED.color}
+                                    stackId="a"
+                                />
+                            </AreaChart>) : (
+                            <AreaChart data={filteredData}>
+                                <defs>
+                                    <linearGradient id="fillLow" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.LOW.color}
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.LOW.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
+                                    <linearGradient id="fillMedium" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.MEDIUM.color}
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.MEDIUM.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
+                                    <linearGradient id="fillHigh" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor={chartConfig.HIGH.color}
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor={chartConfig.HIGH.color}
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={8}
+                                    minTickGap={32}
+                                    tickFormatter={(value) => {
+                                        const date = new Date(value)
+                                        return date.toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                        })
+                                    }}
+                                />
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={
+                                        <ChartTooltipContent
+                                            labelFormatter={(value) => {
+                                                return new Date(value).toLocaleDateString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })
+                                            }}
+                                            indicator="dot"
+                                        />
+                                    }
+                                />
+                                <Area
+                                    dataKey="HIGH"
+                                    type="natural"
+                                    fill="url(#fillHigh)"
+                                    stroke={chartConfig.HIGH.color}
+                                    stackId="a"
+                                />
+                                <Area
+                                    dataKey="MEDIUM"
+                                    type="natural"
+                                    fill="url(#fillMedium)"
+                                    stroke={chartConfig.MEDIUM.color}
+                                    stackId="a"
+                                />
+                                <Area
+                                    dataKey="LOW"
+                                    type="natural"
+                                    fill="url(#fillLow)"
+                                    stroke={chartConfig.LOW.color}
+                                    stackId="a"
+                                />
 
-                        </AreaChart>
-                    )}
-                </ChartContainer>
-            </CardContent>
-        </Card>
+                            </AreaChart>
+                        )}
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </section>
     )
 }

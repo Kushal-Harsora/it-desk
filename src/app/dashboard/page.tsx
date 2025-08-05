@@ -101,7 +101,7 @@ const TicketSchema = z.object({
     })
 });
 
-export const columns: ColumnDef<Ticket>[] = [
+const columns: ColumnDef<Ticket>[] = [
     // {
     //     id: "select",
     //     header: ({ table }) => (
@@ -391,9 +391,9 @@ export default function Page() {
     }
 
     return (
-        <main className="top-0 left-0 flex-1 h-full items-center justify-center max-md:px-[3.5vw]">
+        <main className="flex-1 h-fit items-center justify-center max-md:px-[3.5vw]">
             <ChartArea />
-            <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
+            <div className="w-full h-full px-[2.5vw] flex flex-col items-center justify-center gap-2">
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
