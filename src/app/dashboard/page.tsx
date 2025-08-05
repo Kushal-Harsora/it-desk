@@ -365,17 +365,37 @@ export default function Page() {
                 headers: {
                     'Content-type': 'multipart/form-data'
                 }
-            })
+            });
 
-            if (response.status === 200) {
-                console.log(values);
+            const data = response.data;
+
+            if (response.status === 201) {
                 form.reset();
-                toast.success("Success");
+                toast.success(data.message || "Ticket Created successfully", {
+                    style: {
+                        "backgroundColor": "#D5F5E3",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 1500
+                });
                 setOpen(false);
             }
         } catch (error) {
-            toast.error("Some error occured");
-            console.error("Error creating ticket:", error);
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 500) {
+                    toast.error(data.error || "Failed to create ticket", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    form.reset();
+                }
+            }
         }
 
     }

@@ -19,26 +19,53 @@ export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseForm(req);
 
-    // console.log(fields)
-
     const title = fields.title?.[0] || '';
     const description = fields.description?.[0] || '';
     const priority = fields.priority?.[0] || '';
-    console.log({ description, priority, title });
 
     if (!description || !priority || !title) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    let fileName = '';
+
+    if (files && files.attachProof?.[0]) {
+      const file = files.attachProof[0];
+      fileName = `${uuid()}-${title}-${file.originalFilename}`
+
+  //     await s3.send(new PutObjectCommand({
+  //   Bucket: 'your-bucket-name',
+  //   Key: newFileName,
+  //   Body: fs.createReadStream(file.filepath),
+  //   ContentType: file.mimetype,
+  // }));
+    }
+
     const ticket = await prisma.ticket.create({
       data: {
         description,
-        priority: Priority[priority as keyof typeof Priority] || Priority.LOW,
+        priority: Priority[priority.toUpperCase() as keyof typeof Priority] || Priority.LOW,
         title,
+        attachment: fileName,
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
     });
 
-    return NextResponse.json(ticket, { status: 201 });
+    if (ticket) {
+      return NextResponse.json({
+        message: "Ticket created successfully"
+      }, { 
+        status: 201
+      });
+    } else {
+      return NextResponse.json({
+        error: 'Failed to create ticket'
+      }, {
+        status: 500
+      });
+    }
+
 
   } catch (error) {
     console.error('Error creating ticket:', error);
