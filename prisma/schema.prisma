@@ -51,11 +51,14 @@ model Technician {
   tickets  Ticket[]
 }
 
+
 enum Priority {
   LOW
   MEDIUM
   HIGH
 }
+
+
 
 enum Status {
   OPEN
