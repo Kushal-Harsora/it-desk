@@ -10,6 +10,7 @@ export function middleware() {
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/api/:path*'
+    '/api/:path*',
+    '/login'
   ],
 }
