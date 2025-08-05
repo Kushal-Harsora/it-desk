@@ -72,106 +72,19 @@ import { toast } from "sonner"
 // Icon and Style imports
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import axios, { AxiosResponse } from "axios"
+import { Priority, Status } from "@prisma/client"
 
 
-// Sample Table Data
+// Ticket Type Definition
 export type Ticket = {
-    id: string
-    priority: 'high' | 'medium' | 'low'
-    status: 'open' | 'in progress' | 'closed'
+    title: string
+    priority: Priority,
+    status: Status,
     ticket: string,
-    problem: string
+    description: string
 }
 
-const data: Ticket[] = [
-    {
-        id: "m5gr84i9",
-        priority: 'high',
-        status: "closed",
-        ticket: "Ticket1",
-        problem: "Network lag"
-    },
-    {
-        id: "3u1reuv4",
-        priority: 'low',
-        status: "in progress",
-        ticket: "Ticket2",
-        problem: "Payment lag"
-    },
-    {
-        id: "derv1ws0",
-        priority: 'medium',
-        status: "in progress",
-        ticket: "Ticket3",
-        problem: "Firewall issue"
-    },
-    {
-        id: "5kma53ae",
-        priority: 'high',
-        status: "open",
-        ticket: "Ticket4",
-        problem: "Wifi lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-];
-
 // Create Ticket Form Schema
-
 const TicketSchema = z.object({
     title: z.string().min(1, {
         message: "Ticket title is required"
@@ -180,7 +93,7 @@ const TicketSchema = z.object({
         message: "Problem description is required"
     }),
     attachProof: z.instanceof(File).optional(),
-    priority: z.enum(['high', 'medium', 'low'], {
+    priority: z.enum(Priority, {
         message: "Priority is required"
     })
 });
@@ -221,7 +134,7 @@ export const columns: ColumnDef<Ticket>[] = [
         },
     },
     {
-        accessorKey: "ticket",
+        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button
@@ -234,10 +147,10 @@ export const columns: ColumnDef<Ticket>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div>{row.getValue("ticket")}</div>,
+        cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
     {
-        accessorKey: "problem",
+        accessorKey: "description",
         header: ({ column }) => {
             return (
                 <Button
@@ -250,7 +163,7 @@ export const columns: ColumnDef<Ticket>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div>{row.getValue("problem")}</div>,
+        cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
     {
         accessorKey: "priority",
@@ -268,7 +181,7 @@ export const columns: ColumnDef<Ticket>[] = [
         id: "actions",
         enableHiding: false,
         cell: ({ row }) => {
-            const ticket = row.original.ticket
+            const title = row.original.title
 
             return (
                 <DropdownMenu>
@@ -281,7 +194,7 @@ export const columns: ColumnDef<Ticket>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(ticket)}
+                            onClick={() => navigator.clipboard.writeText(title)}
                         >
                             Copy Ticket Name
                         </DropdownMenuItem>
@@ -308,6 +221,7 @@ export default function Page() {
     });
 
     const [open, setOpen] = React.useState(false);
+    const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
@@ -321,7 +235,7 @@ export default function Page() {
     const [rowSelection, setRowSelection] = React.useState({})
 
     const table = useReactTable({
-        data,
+        data: TicketData,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -344,9 +258,11 @@ export default function Page() {
     // Get the Ticket Data
     React.useEffect(() => {
         const getData = async () => {
-            // Fetch data from an API or database
             const response: AxiosResponse = await axios.get('api/tickets');
-            console.log(response.data);
+            if (response.status === 200) {
+                setTicketData(response.data);
+                console.log(response.data);
+            }
         }
 
         getData();
@@ -409,9 +325,9 @@ export default function Page() {
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
-                        value={(table.getColumn("ticket")?.getFilterValue() as string) ?? ""}
+                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
-                            table.getColumn("ticket")?.setFilterValue(event.target.value)
+                            table.getColumn("title")?.setFilterValue(event.target.value)
                         }
                         className="max-w-sm"
                     />
