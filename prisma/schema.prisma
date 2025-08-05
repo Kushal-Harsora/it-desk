@@ -42,21 +42,15 @@ model Comment {
 }
 
 model Technician {
-<<<<<<< HEAD
-  id       Int        @id @default(autoincrement())
-  name     String
-  email    String     @unique
-  password String     // <-- Add this field for authentication
-=======
   id        Int        @id @default(autoincrement())
   name      String
   email     String     @unique
   password  String
-  createdAt DateTime @default(now())
->>>>>>> a7398e3549ffe5c5e32e4e69f69709f1b9bfbd21
-  comments Comment[]
-  tickets  Ticket[]
+  createdAt DateTime   @default(now())
+  comments  Comment[]
+  tickets   Ticket[]
 }
+
 
 
 enum Priority {
