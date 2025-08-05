@@ -16,6 +16,8 @@ import {
 } from "@tanstack/react-table"
 import { z } from 'zod'
 import { useForm } from "react-hook-form"
+import { cn } from "@/lib/utils"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 // Component imports
 import {
@@ -41,6 +43,9 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -60,113 +65,26 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+// import { Checkbox } from "@/components/ui/checkbox"
 
 // Icon and Style imports
-import { ArrowUpDown, ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import axios, { AxiosResponse } from "axios"
+import { Priority, Status } from "@prisma/client"
 
-// Sample Table Data
-export type Payment = {
-    id: string
-    priority: 'high' | 'medium' | 'low'
-    status: 'open' | 'in progress' | 'closed'
+
+// Ticket Type Definition
+export type Ticket = {
+    title: string
+    priority: Priority,
+    status: Status,
     ticket: string,
-    problem: string
+    description: string
 }
 
-const data: Payment[] = [
-    {
-        id: "m5gr84i9",
-        priority: 'high',
-        status: "closed",
-        ticket: "Ticket1",
-        problem: "Network lag"
-    },
-    {
-        id: "3u1reuv4",
-        priority: 'low',
-        status: "in progress",
-        ticket: "Ticket2",
-        problem: "Payment lag"
-    },
-    {
-        id: "derv1ws0",
-        priority: 'medium',
-        status: "in progress",
-        ticket: "Ticket3",
-        problem: "Firewall issue"
-    },
-    {
-        id: "5kma53ae",
-        priority: 'high',
-        status: "open",
-        ticket: "Ticket4",
-        problem: "Wifi lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-];
-
 // Create Ticket Form Schema
-
 const TicketSchema = z.object({
     title: z.string().min(1, {
         message: "Ticket title is required"
@@ -175,12 +93,12 @@ const TicketSchema = z.object({
         message: "Problem description is required"
     }),
     attachProof: z.instanceof(File).optional(),
-    priority: z.enum(['high', 'medium', 'low'], {
+    priority: z.enum(Priority, {
         message: "Priority is required"
     })
 });
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Ticket>[] = [
     // {
     //     id: "select",
     //     header: ({ table }) => (
@@ -216,7 +134,7 @@ export const columns: ColumnDef<Payment>[] = [
         },
     },
     {
-        accessorKey: "ticket",
+        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button
@@ -229,10 +147,10 @@ export const columns: ColumnDef<Payment>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("ticket")}</div>,
+        cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
     {
-        accessorKey: "problem",
+        accessorKey: "description",
         header: ({ column }) => {
             return (
                 <Button
@@ -245,7 +163,7 @@ export const columns: ColumnDef<Payment>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className=" capitalize">{row.getValue("problem")}</div>,
+        cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
     {
         accessorKey: "priority",
@@ -259,41 +177,35 @@ export const columns: ColumnDef<Payment>[] = [
             })}>{priority}</div>
         },
     },
-    // {
-    //     id: "actions",
-    //     enableHiding: false,
-    //     cell: ({ row }) => {
-    //         const payment = row.original
+    {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+            const title = row.original.title
 
-    //         return (
-    //             <DropdownMenu>
-    //                 <DropdownMenuTrigger asChild>
-    //                     <Button variant={'ghost'} className="h-8 w-8 p-0">
-    //                         <span className="sr-only">Open menu</span>
-    //                         <MoreHorizontal />
-    //                     </Button>
-    //                 </DropdownMenuTrigger>
-    //                 <DropdownMenuContent align="end">
-    //                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //                     <DropdownMenuItem
-    //                         onClick={() => navigator.clipboard.writeText(payment.id)}
-    //                     >
-    //                         Copy payment ID
-    //                     </DropdownMenuItem>
-    //                     <DropdownMenuSeparator />
-    //                     <DropdownMenuItem>View customer</DropdownMenuItem>
-    //                     <DropdownMenuItem>View payment details</DropdownMenuItem>
-    //                 </DropdownMenuContent>
-    //             </DropdownMenu>
-    //         )
-    //     },
-    // },
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant={'ghost'} className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem
+                            onClick={() => navigator.clipboard.writeText(title)}
+                        >
+                            Copy Ticket Name
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>View Ticket</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
+        },
+    },
 ]
-
-// Get the Ticket Data
-const getData = async () => {
-    // Fetch data from an API or database
-}
 
 
 export default function Page() {
@@ -309,16 +221,21 @@ export default function Page() {
     });
 
     const [open, setOpen] = React.useState(false);
+    const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
     )
+    const [pagination, setPagination] = React.useState({
+        pageIndex: 0,
+        pageSize: 8,
+    });
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
 
     const table = useReactTable({
-        data,
+        data: TicketData,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -328,23 +245,79 @@ export default function Page() {
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
+        onPaginationChange: setPagination,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
+            pagination
         },
     });
 
+    // Get the Ticket Data
+    React.useEffect(() => {
+        const getData = async () => {
+            const response: AxiosResponse = await axios.get('api/tickets');
+            if (response.status === 200) {
+                setTicketData(response.data);
+                console.log(response.data);
+            }
+        }
+
+        getData();
+    }, [])
+
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
-        console.log(values);
-        form.reset();
-        toast.success("Success");
-        setOpen(false);
+
+        const formData = new FormData();
+        formData.append("title", values.title)
+        formData.append("description", values.description);
+        formData.append("priority", values.priority);
+        if (values.attachProof != undefined)
+            formData.append("attachProof", values.attachProof);
+        try {
+            const response: AxiosResponse = await axios.post('/api/tickets', formData, {
+                headers: {
+                    'Content-type': 'multipart/form-data'
+                }
+            });
+
+            const data = response.data;
+
+            if (response.status === 201) {
+                form.reset();
+                toast.success(data.message || "Ticket Created successfully", {
+                    style: {
+                        "backgroundColor": "#D5F5E3",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 1500
+                });
+                setOpen(false);
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 500) {
+                    toast.error(data.error || "Failed to create ticket", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    form.reset();
+                }
+            }
+        }
+
     }
 
     return (
-        <main className="flex-1 h-full items-center justify-center px-[5vw] max-md:px-[3.5vw]">
+        <main className="top-0 left-0 flex-1 h-full items-center justify-center max-md:px-[3.5vw]">
             <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
                 <h1 className=" text-5xl max-lg:text-3xl font-bold">
                     Ticket Table
@@ -352,9 +325,9 @@ export default function Page() {
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
-                        value={(table.getColumn("ticket")?.getFilterValue() as string) ?? ""}
+                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
-                            table.getColumn("ticket")?.setFilterValue(event.target.value)
+                            table.getColumn("title")?.setFilterValue(event.target.value)
                         }
                         className="max-w-sm"
                     />
@@ -479,7 +452,7 @@ export default function Page() {
                         </DialogContent>
                     </Dialog>
                 </div>
-                <div className="w-full rounded-md border">
+                <div className=" w-full rounded-md border">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
