@@ -14,6 +14,8 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
+import { z } from 'zod'
+import { useForm } from "react-hook-form"
 
 // Component imports
 import {
@@ -50,12 +52,22 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 // Icon and Style imports
 import { ArrowUpDown, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
 
 // Sample Table Data
 export type Payment = {
@@ -151,7 +163,22 @@ const data: Payment[] = [
         ticket: "Ticket5",
         problem: "Network lag"
     },
-]
+];
+
+// Create Ticket Form Schema
+
+const TicketSchema = z.object({
+    title: z.string().min(1, {
+        message: "Ticket title is required"
+    }),
+    description: z.string().min(1, {
+        message: "Problem description is required"
+    }),
+    attachProof: z.instanceof(File).optional(),
+    priority: z.enum(['high', 'medium', 'low'], {
+        message: "Priority is required"
+    })
+});
 
 export const columns: ColumnDef<Payment>[] = [
     // {
@@ -268,7 +295,20 @@ const getData = async () => {
     // Fetch data from an API or database
 }
 
+
 export default function Page() {
+
+    // Form Handling
+    const form = useForm<z.infer<typeof TicketSchema>>({
+        resolver: zodResolver(TicketSchema),
+        defaultValues: {
+            title: "",
+            description: "",
+            attachProof: undefined,
+        },
+    });
+
+    const [open, setOpen] = React.useState(false);
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
@@ -294,7 +334,14 @@ export default function Page() {
             columnVisibility,
             rowSelection,
         },
-    })
+    });
+
+    const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
+        console.log(values);
+        form.reset();
+        toast.success("Success");
+        setOpen(false);
+    }
 
     return (
         <main className="flex-1 h-full items-center justify-center px-[5vw] max-md:px-[3.5vw]">
@@ -337,7 +384,7 @@ export default function Page() {
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Dialog>
+                    <Dialog open={open} onOpenChange={setOpen}>
                         <DialogTrigger asChild>
                             <Button variant={'default'}>Create Ticket</Button>
                         </DialogTrigger>
@@ -348,47 +395,87 @@ export default function Page() {
                                     Enter the ticket details here. Click save when you&apos;re done.
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="flex flex-col items-start justify-center gap-4">
-                                    <Label htmlFor="name" className="text-right">
-                                        Ticket Title
-                                    </Label>
-                                    <Input id="name" className="col-span-3" />
-                                </div>
-                                <div className="flex flex-col items-start justify-center gap-4">
-                                    <Label htmlFor="username" className="text-left">
-                                        Description
-                                    </Label>
-                                    <Textarea id="username" className="col-span-3 min-h-[100px] max-h-[800px] overflow-y-auto" />
-                                </div>
-                                <div className="flex flex-col items-start justify-center gap-4">
-                                    <Label htmlFor="username" className="text-left">
-                                        Attack Image
-                                    </Label>
-                                    <Input id="picture" type="file" />
-                                </div>
-                                <div className="flex flex-col items-start justify-center gap-4">
-                                    <Label htmlFor="username" className="text-left">
-                                        Priority
-                                    </Label>
-                                    <Select>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select ticket priority" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Ticket Priority</SelectLabel>
-                                                <SelectItem value="high">High</SelectItem>
-                                                <SelectItem value="medium">Medium</SelectItem>
-                                                <SelectItem value="low">Low</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit">Save changes</Button>
-                            </DialogFooter>
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="title"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Ticket Title</FormLabel>
+                                                <FormControl>
+                                                    <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="description"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Ticket Description</FormLabel>
+                                                <FormControl>
+                                                    <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="attachProof"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Attach PDF/Image</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        accept=".pdf, image/*"
+                                                        type="file"
+                                                        onChange={e => {
+                                                            const file = e.target.files?.[0];
+                                                            field.onChange(file);
+                                                        }}
+                                                        onBlur={field.onBlur}
+                                                        name={field.name}
+                                                        ref={field.ref}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="priority"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Priority</FormLabel>
+                                                <FormControl>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select ticket priority" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectGroup>
+                                                                <SelectLabel>Ticket Priority</SelectLabel>
+                                                                <SelectItem value="high">High</SelectItem>
+                                                                <SelectItem value="medium">Medium</SelectItem>
+                                                                <SelectItem value="low">Low</SelectItem>
+                                                            </SelectGroup>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <DialogFooter>
+                                        <Button type="submit">Create Ticket</Button>
+                                    </DialogFooter>
+                                </form>
+                            </Form>
                         </DialogContent>
                     </Dialog>
                 </div>
