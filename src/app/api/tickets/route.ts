@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
-import { prisma } from '@/server/prisma';
+import { prisma } from '@/db/prisma';
 import { parseForm } from '@/utils/parseForm';
 import { promises as fs, stat } from 'fs';
 import { success } from 'zod';

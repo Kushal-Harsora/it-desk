@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
-import { prisma } from '@/server//prisma'
+import { prisma } from '../../../db/prisma'
 import { IncomingForm } from 'formidable';
 import { parseForm } from '@/utils/parseForm';
 import { promises as fs } from 'fs';
