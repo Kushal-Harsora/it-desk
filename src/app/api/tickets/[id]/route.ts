@@ -10,9 +10,6 @@ import next from 'next';
 
 // app/api/tickets/[id]/route.ts
 
-
-
-
 export const config = {
   api: {
     bodyParser: false,

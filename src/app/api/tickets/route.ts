@@ -7,10 +7,6 @@ import { parseForm } from '@/utils/parseForm';
 import { promises as fs, stat } from 'fs';
 import { success } from 'zod';
 
-// app/api/tickets/route.ts
-
-
-
 
 export const config = {
   api: {
