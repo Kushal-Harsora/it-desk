@@ -73,6 +73,7 @@ import { toast } from "sonner"
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import axios, { AxiosResponse } from "axios"
 import { Priority, Status } from "@prisma/client"
+import { ChartArea } from "@/components/custom/Chart-Area"
 
 
 // Ticket Type Definition
@@ -391,10 +392,8 @@ export default function Page() {
 
     return (
         <main className="top-0 left-0 flex-1 h-full items-center justify-center max-md:px-[3.5vw]">
+            <ChartArea />
             <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
-                <h1 className=" text-5xl max-lg:text-3xl font-bold">
-                    Ticket Table
-                </h1>
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
