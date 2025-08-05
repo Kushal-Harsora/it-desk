@@ -81,7 +81,9 @@ export type Ticket = {
     priority: Priority,
     status: Status,
     ticket: string,
-    description: string
+    description: string,
+    createdAt: Date,
+    attachment: string
 }
 
 // Create Ticket Form Schema
@@ -126,10 +128,11 @@ export const columns: ColumnDef<Ticket>[] = [
         header: () => <div className="text-start">Status</div>,
         cell: ({ row }) => {
             const status: string = row.getValue("status");
-            return <div className={cn(`text-left font-medium`, {
-                'text-red-500': status === 'open',
-                'text-yellow-500': status === 'in progress',
-                'text-green-500': status === 'closed',
+            return <div className={cn(`text-left font-semibold`, {
+                'text-red-500': status === 'OPEN',
+                'text-yellow-500': status === 'IN_PRORESS',
+                'text-green-500': status === 'RESOLVED',
+                'text-blue-500': status === 'CLOSED',
             })}>{status}</div>
         },
     },
@@ -171,9 +174,9 @@ export const columns: ColumnDef<Ticket>[] = [
         cell: ({ row }) => {
             const priority: string = row.getValue("priority");
             return <div className={cn(`text-left font-medium`, {
-                'text-red-500': priority === 'high',
-                'text-yellow-500': priority === 'medium',
-                'text-green-500': priority === 'low',
+                'text-red-500': priority === 'HIGH',
+                'text-yellow-500': priority === 'MEDIUM',
+                'text-green-500': priority === 'LOW',
             })}>{priority}</div>
         },
     },
@@ -182,6 +185,15 @@ export const columns: ColumnDef<Ticket>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const title = row.original.title
+            const row_data = row.original;
+            const createdAt = new Date(row_data.createdAt);
+
+            const formattedDate = new Intl.DateTimeFormat('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                timeZone: 'Asia/Kolkata',
+            }).format(createdAt);
 
             return (
                 <DropdownMenu>
@@ -199,7 +211,67 @@ export const columns: ColumnDef<Ticket>[] = [
                             Copy Ticket Name
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>View Ticket</DropdownMenuItem>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button className=" w-full" variant={'ghost'}>
+                                    View Details
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle className=" text-center">
+                                        Ticket Details for <span className=" font-bold text-blue-500">{row_data.title}</span>
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
+                                    <div className=" w-full h-fit flex flex-row justify-evenly items-center">
+                                        <div className=" flex flex-row gap-1 justify-center items-center">
+                                            <span className=" font-medium">Status: </span>
+                                            <div className={cn(`text-left font-medium`, {
+                                                'text-red-500': row_data.status === 'OPEN',
+                                                'text-yellow-500': row_data.status === 'IN_PROGRESS',
+                                                'text-green-500': row_data.status === 'RESOLVED',
+                                                'text-blue-500': row_data.status === 'CLOSED',
+                                            })}>{row_data.status}</div>
+                                        </div>
+                                        <div className=" flex flex-row gap-1 justify-center items-center">
+                                            <span className=" font-medium">Priority: </span>
+                                            <div className={cn(`text-left font-medium`, {
+                                                'text-red-500': row_data.priority === 'HIGH',
+                                                'text-yellow-500': row_data.priority === 'MEDIUM',
+                                                'text-green-500': row_data.priority === 'LOW',
+                                            })}>{row_data.priority}</div>
+                                        </div>
+                                        <div className=" flex flex-row gap-1 justify-center items-center">
+                                            <span className=" font-medium">Date: </span>
+                                            <div className="text-left font-medium">{formattedDate}</div>
+                                        </div>
+                                    </div>
+                                    <div className=" flex flex-col justify-center items-center gap-2">
+                                        <span className=" font-medium">Description: </span>
+                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                            {row_data.description}
+                                        </div>
+                                    </div>
+                                    {(row_data.attachment != '') && <div className=" flex flex-col justify-center items-center gap-2">
+                                        <span className=" font-medium">Attachment: </span>
+                                        {/* <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                            {row_data.attachment}
+                                        </div> */}
+                                        <Button variant={'default'}>
+                                            View Attachment
+                                        </Button>
+                                    </div>}
+
+                                    <div className=" flex flex-col justify-center items-center gap-2">
+                                        <span className=" font-medium">Comments: </span>
+                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                            {row_data.description}
+                                        </div>
+                                    </div>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )
@@ -261,7 +333,7 @@ export default function Page() {
             const response: AxiosResponse = await axios.get('api/tickets');
             if (response.status === 200) {
                 setTicketData(response.data);
-                console.log(response.data);
+                console.log(response.data[1].attachment);
             }
         }
 
@@ -296,6 +368,7 @@ export default function Page() {
                     duration: 1500
                 });
                 setOpen(false);
+                window.location.reload();
             }
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
@@ -433,9 +506,9 @@ export default function Page() {
                                                         <SelectContent>
                                                             <SelectGroup>
                                                                 <SelectLabel>Ticket Priority</SelectLabel>
-                                                                <SelectItem value="high">High</SelectItem>
-                                                                <SelectItem value="medium">Medium</SelectItem>
-                                                                <SelectItem value="low">Low</SelectItem>
+                                                                <SelectItem value="HIGH">High</SelectItem>
+                                                                <SelectItem value="MEDIUM">Medium</SelectItem>
+                                                                <SelectItem value="LOW">Low</SelectItem>
                                                             </SelectGroup>
                                                         </SelectContent>
                                                     </Select>
