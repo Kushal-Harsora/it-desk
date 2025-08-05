@@ -49,80 +49,51 @@ const Page = () => {
         },
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        // try {
-        //     const response: AxiosResponse = await axios.post('/api/login', values, {
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //     });
-        //     const data = response.data;
-        //     if (response.status === 200 || response.status === 201) {
-        //         window.localStorage.setItem("name", data.name);
-        //         toast.success(data.message || "Login successful!", {
-        //             style: {
-        //                 "backgroundColor": "#D5F5E3",
-        //                 "color": "black",
-        //                 "border": "none"
-        //             },
-        //             duration: 1500
-        //         });
-        //         form.reset();
-        //         router.push('/dashboard');
-        //     }
-        // } catch (error) {
-        //     if (axios.isAxiosError(error) && error.response) {
-        //         const { status, data } = error.response;
-        //         if (status === 401) {
-        //             toast.error(data.error || "Admin does not Exists", {
-        //                 style: {
-        //                     "backgroundColor": "#FADBD8",
-        //                     "color": "black",
-        //                     "border": "none"
-        //                 },
-        //                 duration: 2500
-        //             })
-        //             form.reset();
-        //         } else if (status === 409) {
-        //             toast.error(data.error || "Invalid Credentials", {
-        //                 style: {
-        //                     "backgroundColor": "#FADBD8",
-        //                     "color": "black",
-        //                     "border": "none"
-        //                 },
-        //                 duration: 2500
-        //             });
-        //             form.resetField('password');
-        //         } else {
-        //             toast.error(data.error || "Some Error Occured", {
-        //                 style: {
-        //                     "backgroundColor": "#FADBD8",
-        //                     "color": "black",
-        //                     "border": "none"
-        //                 },
-        //                 duration: 2500
-        //             });
-        //             form.reset();
-        //         }
-        //     } else {
-        //         toast.error("An unexpected error occurred. Please try again.", {
-        //             invert: false,
-        //             duration: 2500
-        //         });
-        //     }
-        // }
-        console.log(values);
-        toast.success("Login successful!", {
-            style: {
-                "backgroundColor": "#D5F5E3",
-                "color": "black",
-                "border": "none"
+   async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+        const response: AxiosResponse = await axios.post('/api/technician/login', values, {
+            headers: {
+                'Content-Type': 'application/json',
             },
-            duration: 1500
         });
-        form.reset();
-        router.push("/dashboard");
+
+        const data = response.data;
+
+        if (response.status === 200) {
+            localStorage.setItem("name", data.name);
+            toast.success(data.message || "Login successful!", {
+                style: {
+                    backgroundColor: "#D5F5E3",
+                    color: "black",
+                    border: "none",
+                },
+                duration: 1500,
+            });
+            form.reset();
+            router.push('/admin/dashboard');
+        }
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const { status, data } = error.response;
+            const errorMsg = data.message || "Something went wrong";
+
+            toast.error(errorMsg, {
+                style: {
+                    backgroundColor: "#FADBD8",
+                    color: "black",
+                    border: "none",
+                },
+                duration: 2500,
+            });
+            form.resetField("password");
+        } else {
+            toast.error("An unexpected error occurred. Please try again.", {
+                duration: 2500,
+            });
+        }
     }
+}
+
 
     return (
         <React.Fragment>
