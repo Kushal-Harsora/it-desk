@@ -16,6 +16,8 @@ import {
 } from "@tanstack/react-table"
 import { z } from 'zod'
 import { useForm } from "react-hook-form"
+import { cn } from "@/lib/utils"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 // Component imports
 import {
@@ -41,6 +43,9 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -60,17 +65,17 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+// import { Checkbox } from "@/components/ui/checkbox"
 
 // Icon and Style imports
-import { ArrowUpDown, ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import axios, { AxiosResponse } from "axios"
+
 
 // Sample Table Data
-export type Payment = {
+export type Ticket = {
     id: string
     priority: 'high' | 'medium' | 'low'
     status: 'open' | 'in progress' | 'closed'
@@ -78,7 +83,7 @@ export type Payment = {
     problem: string
 }
 
-const data: Payment[] = [
+const data: Ticket[] = [
     {
         id: "m5gr84i9",
         priority: 'high',
@@ -180,7 +185,7 @@ const TicketSchema = z.object({
     })
 });
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Ticket>[] = [
     // {
     //     id: "select",
     //     header: ({ table }) => (
@@ -229,7 +234,7 @@ export const columns: ColumnDef<Payment>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("ticket")}</div>,
+        cell: ({ row }) => <div>{row.getValue("ticket")}</div>,
     },
     {
         accessorKey: "problem",
@@ -245,7 +250,7 @@ export const columns: ColumnDef<Payment>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className=" capitalize">{row.getValue("problem")}</div>,
+        cell: ({ row }) => <div>{row.getValue("problem")}</div>,
     },
     {
         accessorKey: "priority",
@@ -259,41 +264,35 @@ export const columns: ColumnDef<Payment>[] = [
             })}>{priority}</div>
         },
     },
-    // {
-    //     id: "actions",
-    //     enableHiding: false,
-    //     cell: ({ row }) => {
-    //         const payment = row.original
+    {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+            const ticket = row.original.ticket
 
-    //         return (
-    //             <DropdownMenu>
-    //                 <DropdownMenuTrigger asChild>
-    //                     <Button variant={'ghost'} className="h-8 w-8 p-0">
-    //                         <span className="sr-only">Open menu</span>
-    //                         <MoreHorizontal />
-    //                     </Button>
-    //                 </DropdownMenuTrigger>
-    //                 <DropdownMenuContent align="end">
-    //                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //                     <DropdownMenuItem
-    //                         onClick={() => navigator.clipboard.writeText(payment.id)}
-    //                     >
-    //                         Copy payment ID
-    //                     </DropdownMenuItem>
-    //                     <DropdownMenuSeparator />
-    //                     <DropdownMenuItem>View customer</DropdownMenuItem>
-    //                     <DropdownMenuItem>View payment details</DropdownMenuItem>
-    //                 </DropdownMenuContent>
-    //             </DropdownMenu>
-    //         )
-    //     },
-    // },
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant={'ghost'} className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem
+                            onClick={() => navigator.clipboard.writeText(ticket)}
+                        >
+                            Copy Ticket Name
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>View Ticket</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
+        },
+    },
 ]
-
-// Get the Ticket Data
-const getData = async () => {
-    // Fetch data from an API or database
-}
 
 
 export default function Page() {
@@ -313,6 +312,10 @@ export default function Page() {
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
     )
+    const [pagination, setPagination] = React.useState({
+        pageIndex: 0,
+        pageSize: 8,
+    });
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
@@ -328,23 +331,57 @@ export default function Page() {
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
+        onPaginationChange: setPagination,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
+            pagination
         },
     });
 
+    // Get the Ticket Data
+    React.useEffect(() => {
+        const getData = async () => {
+            // Fetch data from an API or database
+            const response: AxiosResponse = await axios.get('api/tickets');
+            console.log(response.data);
+        }
+
+        getData();
+    }, [])
+
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
-        console.log(values);
-        form.reset();
-        toast.success("Success");
-        setOpen(false);
+
+        const formData = new FormData();
+        formData.append("title", values.title)
+        formData.append("description", values.description);
+        formData.append("priority", values.priority);
+        if (values.attachProof != undefined)
+            formData.append("attachProof", values.attachProof);
+        try {
+            const response: AxiosResponse = await axios.post('/api/tickets', formData, {
+                headers: {
+                    'Content-type': 'multipart/form-data'
+                }
+            })
+
+            if (response.status === 200) {
+                console.log(values);
+                form.reset();
+                toast.success("Success");
+                setOpen(false);
+            }
+        } catch (error) {
+            toast.error("Some error occured");
+            console.error("Error creating ticket:", error);
+        }
+
     }
 
     return (
-        <main className="flex-1 h-full items-center justify-center px-[5vw] max-md:px-[3.5vw]">
+        <main className="top-0 left-0 flex-1 h-full items-center justify-center max-md:px-[3.5vw]">
             <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
                 <h1 className=" text-5xl max-lg:text-3xl font-bold">
                     Ticket Table
@@ -479,7 +516,7 @@ export default function Page() {
                         </DialogContent>
                     </Dialog>
                 </div>
-                <div className="w-full rounded-md border">
+                <div className=" w-full rounded-md border">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (

@@ -3,6 +3,7 @@ import { writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '@/db/prisma';
+import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
 import { promises as fs, stat } from 'fs';
 import { success } from 'zod';
@@ -18,20 +19,22 @@ export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseForm(req);
 
+    // console.log(fields)
+
+    const title = fields.title?.[0] || '';
     const description = fields.description?.[0] || '';
     const priority = fields.priority?.[0] || '';
-    const category = fields.category?.[0] || '';
-    // console.log({ description, priority, category });
+    console.log({ description, priority, title });
 
-    if (!description || !priority || !category) {
+    if (!description || !priority || !title) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const ticket = await prisma.ticket.create({
       data: {
         description,
-        priority,
-        category,
+        priority: Priority[priority as keyof typeof Priority] || Priority.LOW,
+        title,
       },
     });
 

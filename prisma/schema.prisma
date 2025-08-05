@@ -15,6 +15,7 @@ datasource db {
 
 model Ticket {
   id          Int         @id @default(autoincrement())
+  title       String
   description String
   priority    Priority
   status      Status      @default(OPEN)
@@ -25,8 +26,6 @@ model Ticket {
   comments    Comment[]   
   technician  Technician? @relation(fields: [technicianId], references: [id])
   technicianId Int?
-
-  category    String
 }
 
 model Comment {
