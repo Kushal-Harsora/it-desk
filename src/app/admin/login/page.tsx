@@ -33,8 +33,7 @@ const formSchema = z.object({
     email: z.email(),
     password: z.string().min(8, {
         message: "Password too short"
-    }),
-    
+    })
 });
 
 const Page = () => {
@@ -50,78 +49,69 @@ const Page = () => {
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        // try {
-        //     const response: AxiosResponse = await axios.post('/api/login', values, {
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //     });
-        //     const data = response.data;
-        //     if (response.status === 200 || response.status === 201) {
-        //         window.localStorage.setItem("name", data.name);
-        //         toast.success(data.message || "Login successful!", {
-        //             style: {
-        //                 "backgroundColor": "#D5F5E3",
-        //                 "color": "black",
-        //                 "border": "none"
-        //             },
-        //             duration: 1500
-        //         });
-        //         form.reset();
-        //         router.push('/dashboard');
-        //     }
-        // } catch (error) {
-        //     if (axios.isAxiosError(error) && error.response) {
-        //         const { status, data } = error.response;
-        //         if (status === 401) {
-        //             toast.error(data.error || "Admin does not Exists", {
-        //                 style: {
-        //                     "backgroundColor": "#FADBD8",
-        //                     "color": "black",
-        //                     "border": "none"
-        //                 },
-        //                 duration: 2500
-        //             })
-        //             form.reset();
-        //         } else if (status === 409) {
-        //             toast.error(data.error || "Invalid Credentials", {
-        //                 style: {
-        //                     "backgroundColor": "#FADBD8",
-        //                     "color": "black",
-        //                     "border": "none"
-        //                 },
-        //                 duration: 2500
-        //             });
-        //             form.resetField('password');
-        //         } else {
-        //             toast.error(data.error || "Some Error Occured", {
-        //                 style: {
-        //                     "backgroundColor": "#FADBD8",
-        //                     "color": "black",
-        //                     "border": "none"
-        //                 },
-        //                 duration: 2500
-        //             });
-        //             form.reset();
-        //         }
-        //     } else {
-        //         toast.error("An unexpected error occurred. Please try again.", {
-        //             invert: false,
-        //             duration: 2500
-        //         });
-        //     }
-        // }
-        console.log(values);
-        toast.success("Login successful!", {
-            style: {
-                "backgroundColor": "#D5F5E3",
-                "color": "black",
-                "border": "none"
-            },
-            duration: 1500
-        });
-        form.reset();
-        router.push("/dashboard");
+
+        try {
+            const response: AxiosResponse = await axios.post('/api/admin/login', values, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            const data = response.data;
+            if (response.status === 200) {
+                window.localStorage.setItem("name", data.name);
+                window.localStorage.setItem("email", data.email);
+                toast.success(data.message || "Login successful!", {
+                    style: {
+                        "backgroundColor": "#D5F5E3",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 1500
+                });
+                form.reset();
+                router.push('/admin/dashboard');
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 401) {
+                    toast.error(data.error || "Invalid Password", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    form.resetField('password');
+                } else if (status === 404) {
+                    toast.error(data.error || "Admin not found", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    });
+                    form.reset();
+                } else {
+                    toast.error(data.error || "Some Error Occured", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    });
+                    form.reset();
+                }
+            } else {
+                toast.error("An unexpected error occurred. Please try again.", {
+                    invert: false,
+                    duration: 2500
+                });
+            }
+        }
     }
 
     return (
@@ -133,7 +123,7 @@ const Page = () => {
                     </h1>
                     <Card className=' max-w-[30vw] max-md:max-w-[75vw] max-lg:max-w-[40vw] w-full max-md:z-10'>
                         <CardHeader>
-                            <CardTitle>LOGIN</CardTitle>
+                            <CardTitle>ADMIN LOGIN</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Form {...form}>
@@ -167,7 +157,7 @@ const Page = () => {
                                     <div className=' w-full h-fit flex items-center justify-center'>
                                         <Button
                                             type="submit"
-                                            className='cursor-pointer rounded-sm bg-orange-500 hover:bg-orange-600 max-w-sm w-full'>
+                                            className='cursor-pointer rounded-sm bg-green-500 hover:bg-green-600 max-w-sm w-full'>
                                             Submit
                                         </Button>
                                     </div>
@@ -177,7 +167,7 @@ const Page = () => {
                     </Card>
                 </section>
                 <Image
-                    src={'/assets/login.jpg'}
+                    src={'/assets/admin.jpg'}
                     alt='Admin Page'
                     width={800}
                     height={800}

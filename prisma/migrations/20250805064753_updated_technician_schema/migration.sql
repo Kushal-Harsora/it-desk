@@ -5,5 +5,5 @@
 
 */
 -- AlterTable
-ALTER TABLE `technician` ADD COLUMN `password` VARCHAR(191) NOT NULL,
+ALTER TABLE `technician`
     ADD COLUMN `role` VARCHAR(191) NOT NULL DEFAULT 'technician';
