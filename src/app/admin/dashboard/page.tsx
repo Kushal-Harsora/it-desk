@@ -1,360 +1,151 @@
 "use client"
 
-// System imports
-import * as React from "react"
+import { useEffect, useState } from "react"
+import { ColumnDef } from "@tanstack/react-table"
 import {
-    ColumnDef,
-    ColumnFiltersState,
-    SortingState,
-    VisibilityState,
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from "@tanstack/react-table"
-import { z } from 'zod'
-import { useForm } from "react-hook-form"
-
-// Component imports
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-
-// Icon and Style imports
-import { ArrowUpDown, ChevronDown } from "lucide-react"
+    DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table"
 import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
 
-// Sample Table Data
-export type Payment = {
+import { ArrowUpDown, ChevronDown, MoreHorizontal , Eye } from "lucide-react"
+
+
+type Ticket = {
     id: string
-    priority: 'high' | 'medium' | 'low'
-    status: 'open' | 'in progress' | 'closed'
-    ticket: string,
+    title: string
     problem: string
+    status: string
+    priority: string
+    description: string
 }
 
-const data: Payment[] = [
-    {
-        id: "m5gr84i9",
-        priority: 'high',
-        status: "closed",
-        ticket: "Ticket1",
-        problem: "Network lag"
-    },
-    {
-        id: "3u1reuv4",
-        priority: 'low',
-        status: "in progress",
-        ticket: "Ticket2",
-        problem: "Payment lag"
-    },
-    {
-        id: "derv1ws0",
-        priority: 'medium',
-        status: "in progress",
-        ticket: "Ticket3",
-        problem: "Firewall issue"
-    },
-    {
-        id: "5kma53ae",
-        priority: 'high',
-        status: "open",
-        ticket: "Ticket4",
-        problem: "Wifi lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-    {
-        id: "bhqecj4p",
-        priority: 'low',
-        status: "closed",
-        ticket: "Ticket5",
-        problem: "Network lag"
-    },
-];
+export default function AdminDashboard() {
+    const [tickets, setTickets] = useState<Ticket[]>([])
+    const [loading, setLoading] = useState(true)
 
-// Create Ticket Form Schema
+    useEffect(() => {
+        const fetchTickets = async () => {
+            try {
+                const res = await fetch("/api/tickets", {
+                    method: "GET",
+                    credentials: "include", // to send cookies if using session auth
+                })
+                const data = await res.json()
+                setTickets(data)
+            } catch (error) {
+                console.error("Error fetching tickets:", error)
+            } finally {
+                setLoading(false)
+            }
+        }
 
-const TicketSchema = z.object({
-    title: z.string().min(1, {
-        message: "Ticket title is required"
-    }),
-    description: z.string().min(1, {
-        message: "Problem description is required"
-    }),
-    attachProof: z.instanceof(File).optional(),
-    priority: z.enum(['high', 'medium', 'low'], {
-        message: "Priority is required"
-    })
-});
+        fetchTickets()
+    }, [])
 
-export const columns: ColumnDef<Payment>[] = [
-    // {
-    //     id: "select",
-    //     header: ({ table }) => (
-    //         <Checkbox
-    //             checked={
-    //                 table.getIsAllPageRowsSelected() ||
-    //                 (table.getIsSomePageRowsSelected() && "indeterminate")
-    //             }
-    //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-    //             aria-label="Select all"
-    //         />
-    //     ),
-    //     cell: ({ row }) => (
-    //         <Checkbox
-    //             checked={row.getIsSelected()}
-    //             onCheckedChange={(value) => row.toggleSelected(!!value)}
-    //             aria-label="Select row"
-    //         />
-    //     ),
-    //     enableSorting: false,
-    //     enableHiding: false,
-    // },
-    {
-        accessorKey: "status",
-        header: () => <div className="text-start">Status</div>,
-        cell: ({ row }) => {
-            const status: string = row.getValue("status");
-            return <div className={cn(`text-left font-medium`, {
-                'text-red-500': status === 'open',
-                'text-yellow-500': status === 'in progress',
-                'text-green-500': status === 'closed',
-            })}>{status}</div>
+    const columns: ColumnDef<Ticket>[] = [
+        {
+            accessorKey: "status",
+            header: () => <div className="text-start">Status</div>,
+            cell: ({ row }) => {
+                const status: string = row.getValue("status");
+                return <div className={cn(`text-left font-medium`, {
+                    'text-red-500': status === 'open',
+                    'text-yellow-500': status === 'in progress',
+                    'text-green-500': status === 'closed',
+                })}>{status}</div>
+            },
         },
-    },
-    {
-        accessorKey: "ticket",
-        header: ({ column }) => {
-            return (
+        {
+            accessorKey: "title",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-left"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Ticket
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => <div>{row.getValue("title")}</div>,
+        },
+        {
+            accessorKey: "description",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-start"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Problem
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => <div>{row.getValue("description")}</div>,
+        },
+        {
+            accessorKey: "priority",
+            header: () => <div className="text-left">Priority</div>,
+            cell: ({ row }) => {
+                const priority: string = row.getValue("priority");
+                return <div className={cn(`text-left font-medium`, {
+                    'text-red-500': priority.toLowerCase() === 'high',
+                    'text-yellow-500': priority.toLowerCase() === 'medium',
+                    'text-green-500': priority.toLowerCase() === 'low',
+                })}>{priority}</div>
+            },
+        },
+        {
+            id: "view",
+            header: "View",
+            cell: ({ row }) => (
                 <Button
-                    className="w-fit text-left"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                        alert(
+                            `Ticket Details:\n\nTitle: ${row.original.title}\nProblem: ${row.original.problem}\nStatus: ${row.original.status}\nPriority: ${row.original.priority}\nDescription: ${row.original.description}`
+                        )
+                    }
                 >
-                    Ticket
-                    <ArrowUpDown />
+                    <Eye className="h-4 w-4" />
                 </Button>
-            )
+            ),
         },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("ticket")}</div>,
-    },
-    {
-        accessorKey: "problem",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-start"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Problem
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div className=" capitalize">{row.getValue("problem")}</div>,
-    },
-    {
-        accessorKey: "priority",
-        header: () => <div className="text-left">Priority</div>,
-        cell: ({ row }) => {
-            const priority: string = row.getValue("priority");
-            return <div className={cn(`text-left font-medium`, {
-                'text-red-500': priority === 'high',
-                'text-yellow-500': priority === 'medium',
-                'text-green-500': priority === 'low',
-            })}>{priority}</div>
-        },
-    },
-    // {
-    //     id: "actions",
-    //     enableHiding: false,
-    //     cell: ({ row }) => {
-    //         const payment = row.original
-
-    //         return (
-    //             <DropdownMenu>
-    //                 <DropdownMenuTrigger asChild>
-    //                     <Button variant={'ghost'} className="h-8 w-8 p-0">
-    //                         <span className="sr-only">Open menu</span>
-    //                         <MoreHorizontal />
-    //                     </Button>
-    //                 </DropdownMenuTrigger>
-    //                 <DropdownMenuContent align="end">
-    //                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //                     <DropdownMenuItem
-    //                         onClick={() => navigator.clipboard.writeText(payment.id)}
-    //                     >
-    //                         Copy payment ID
-    //                     </DropdownMenuItem>
-    //                     <DropdownMenuSeparator />
-    //                     <DropdownMenuItem>View customer</DropdownMenuItem>
-    //                     <DropdownMenuItem>View payment details</DropdownMenuItem>
-    //                 </DropdownMenuContent>
-    //             </DropdownMenu>
-    //         )
-    //     },
-    // },
-]
-
-// Get the Ticket Data
-const getData = async () => {
-    // Fetch data from an API or database
-}
-
-
-export default function Page() {
-
-    // Form Handling
-    const form = useForm<z.infer<typeof TicketSchema>>({
-        resolver: zodResolver(TicketSchema),
-        defaultValues: {
-            title: "",
-            description: "",
-            attachProof: undefined,
-        },
-    });
-
-    const [open, setOpen] = React.useState(false);
-    const [sorting, setSorting] = React.useState<SortingState>([])
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-        []
-    )
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = React.useState({})
+    ]
 
     const table = useReactTable({
-        data,
+        data: tickets,
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        state: {
-            sorting,
-            columnFilters,
-            columnVisibility,
-            rowSelection,
-        },
-    });
+        getPaginationRowModel: getPaginationRowModel(),
+    })
 
-    const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
-        console.log(values);
-        form.reset();
-        toast.success("Success");
-        setOpen(false);
-    }
+    if (loading) return <div className="p-6">Loading tickets...</div>
 
     return (
-        <main className="flex-1 h-full items-center justify-center px-[5vw] max-md:px-[3.5vw]">
+        <main className="top-0 left-0 flex-1 h-full items-center justify-center max-md:px-[3.5vw]">
             <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
                 <h1 className=" text-5xl max-lg:text-3xl font-bold">
-                    Ticket Table
+                    Admin Dashboard 🎟️
                 </h1>
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
-                        value={(table.getColumn("ticket")?.getFilterValue() as string) ?? ""}
+                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
-                            table.getColumn("ticket")?.setFilterValue(event.target.value)
+                            table.getColumn("title")?.setFilterValue(event.target.value)
                         }
                         className="max-w-sm"
                     />
@@ -384,128 +175,30 @@ export default function Page() {
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant={'default'}>Create Ticket</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-sm:max-w-4/5 w-full">
-                            <DialogHeader>
-                                <DialogTitle>Ticket</DialogTitle>
-                                <DialogDescription>
-                                    Enter the ticket details here. Click save when you&apos;re done.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="title"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ticket Title</FormLabel>
-                                                <FormControl>
-                                                    <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="description"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ticket Description</FormLabel>
-                                                <FormControl>
-                                                    <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="attachProof"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Attach PDF/Image</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        accept=".pdf, image/*"
-                                                        type="file"
-                                                        onChange={e => {
-                                                            const file = e.target.files?.[0];
-                                                            field.onChange(file);
-                                                        }}
-                                                        onBlur={field.onBlur}
-                                                        name={field.name}
-                                                        ref={field.ref}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="priority"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Priority</FormLabel>
-                                                <FormControl>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select ticket priority" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                <SelectLabel>Ticket Priority</SelectLabel>
-                                                                <SelectItem value="high">High</SelectItem>
-                                                                <SelectItem value="medium">Medium</SelectItem>
-                                                                <SelectItem value="low">Low</SelectItem>
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <DialogFooter>
-                                        <Button type="submit">Create Ticket</Button>
-                                    </DialogFooter>
-                                </form>
-                            </Form>
-                        </DialogContent>
-                    </Dialog>
                 </div>
+
                 <div className="w-full rounded-md border">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                            </TableHead>
-                                        )
-                                    })}
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}
+                                        </TableHead>
+                                    ))}
                                 </TableRow>
                             ))}
                         </TableHeader>
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
-                                    >
+                                    <TableRow key={row.id}>
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell key={cell.id}>
                                                 {flexRender(
@@ -520,38 +213,33 @@ export default function Page() {
                                 <TableRow>
                                     <TableCell
                                         colSpan={columns.length}
-                                        className="h-24 p-2 text-center"
+                                        className="h-24 text-center"
                                     >
-                                        No results.
+                                        No tickets found.
                                     </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
                     </Table>
                 </div>
+
                 <div className="flex items-center justify-end space-x-2 py-4">
-                    {/* <div className="flex-1 text-sm text-muted-foreground">
-                        {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                        {table.getFilteredRowModel().rows.length} row(s) selected.
-                    </div> */}
-                    <div className="space-x-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Next
-                        </Button>
-                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
                 </div>
             </div>
         </main>

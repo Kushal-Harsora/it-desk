@@ -78,7 +78,7 @@ import { Priority, Status } from "@prisma/client"
 // Ticket Type Definition
 export type Ticket = {
     title: string
-    priority: Priority,
+    priority: string,
     status: Status,
     ticket: string,
     description: string
@@ -93,9 +93,7 @@ const TicketSchema = z.object({
         message: "Problem description is required"
     }),
     attachProof: z.instanceof(File).optional(),
-    priority: z.enum(Priority, {
-        message: "Priority is required"
-    })
+    priority: z.string()
 });
 
 export const columns: ColumnDef<Ticket>[] = [
@@ -171,9 +169,9 @@ export const columns: ColumnDef<Ticket>[] = [
         cell: ({ row }) => {
             const priority: string = row.getValue("priority");
             return <div className={cn(`text-left font-medium`, {
-                'text-red-500': priority === 'high',
-                'text-yellow-500': priority === 'medium',
-                'text-green-500': priority === 'low',
+                'text-red-500': priority.toLowerCase() === 'high',
+                'text-yellow-500': priority.toLowerCase() === 'medium',
+                'text-green-500': priority.toLowerCase() === 'low',
             })}>{priority}</div>
         },
     },
@@ -273,7 +271,7 @@ export default function Page() {
         const formData = new FormData();
         formData.append("title", values.title)
         formData.append("description", values.description);
-        formData.append("priority", values.priority);
+        formData.append("priority", values.priority.toLowerCase());
         if (values.attachProof != undefined)
             formData.append("attachProof", values.attachProof);
         try {

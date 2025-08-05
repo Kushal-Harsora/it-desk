@@ -19,6 +19,9 @@ export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseForm(req);
 
+    console.log("Fields:", fields);
+
+
     const title = fields.title?.[0] || '';
     const description = fields.description?.[0] || '';
     const priority = fields.priority?.[0] || '';
