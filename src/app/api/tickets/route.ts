@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import { writeFile } from 'fs/promises';
-// import path from 'path';
+import { writeFile } from 'fs';
+import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '@/db/prisma';
 import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
-// import { promises as fs, stat } from 'fs';
-// import { success } from 'zod';
+import fs from 'fs';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 
 
@@ -15,6 +16,16 @@ export const config = {
     bodyParser: false,
   },
 };
+
+const s3 = new S3Client({
+  region: "ap-south-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,18 +43,30 @@ export async function POST(req: NextRequest) {
     }
 
     let fileName = '';
+    console.log("Parsed files:", files);
 
-    if (files && files.attachProof?.[0]) {
-      const file = files.attachProof[0];
-      fileName = `${uuid()}-${title}-${file.originalFilename}`
+    if (files && files.attachment?.[0]) {
+      const file = files.attachment[0];
 
-      //     await s3.send(new PutObjectCommand({
-      //   Bucket: 'your-bucket-name',
-      //   Key: newFileName,
-      //   Body: fs.createReadStream(file.filepath),
-      //   ContentType: file.mimetype,
-      // }));
+      const uniqueFileName = `${uuid()}-${title}-${file.originalFilename}`;
+      const s3Key = `${uniqueFileName}-${Date.now()}`;
+
+      console.log("Uploading to S3:", s3Key);
+
+      const stream = fs.createReadStream(file.filepath);
+
+      await s3.send(new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Key: s3Key,
+        Body: stream,
+        ContentType: file.mimetype ?? 'application/octet-stream',
+      }));
+
+      fileName = s3Key; // So you can save it in DB if needed
+      console.log("Upload complete");
     }
+
+
 
     const ticket = await prisma.ticket.create({
       data: {
@@ -80,14 +103,13 @@ export async function POST(req: NextRequest) {
 
 
 
-import { subDays } from 'date-fns'
-// route.ts
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const start = searchParams.get('start');
     const end = searchParams.get('end');
-    console.log("Inside the get request!!!")
+
     let where = {};
 
     if (start && end) {
@@ -104,12 +126,24 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-    });    return NextResponse.json({ tickets }, { status: 200 });
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        priority: true,
+        createdAt: true,
+        updatedAt: true,
+        attachment: true, // <- Add this to explicitly include the image URL
+      },
+    });
+
+    return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
 
 
 

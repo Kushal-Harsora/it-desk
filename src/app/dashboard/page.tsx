@@ -100,28 +100,6 @@ const TicketSchema = z.object({
 });
 
 const columns: ColumnDef<Ticket>[] = [
-    // {
-    //     id: "select",
-    //     header: ({ table }) => (
-    //         <Checkbox
-    //             checked={
-    //                 table.getIsAllPageRowsSelected() ||
-    //                 (table.getIsSomePageRowsSelected() && "indeterminate")
-    //             }
-    //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-    //             aria-label="Select all"
-    //         />
-    //     ),
-    //     cell: ({ row }) => (
-    //         <Checkbox
-    //             checked={row.getIsSelected()}
-    //             onCheckedChange={(value) => row.toggleSelected(!!value)}
-    //             aria-label="Select row"
-    //         />
-    //     ),
-    //     enableSorting: false,
-    //     enableHiding: false,
-    // },
     {
         accessorKey: "status",
         header: () => <div className="text-start">Status</div>,
@@ -292,7 +270,7 @@ export default function Page() {
     });
 
     const [open, setOpen] = React.useState(false);
-    const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
+    const [TicketData, setFilteredTickets] = React.useState<Ticket[]>([]);
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
@@ -328,16 +306,17 @@ export default function Page() {
 
     // Get the Ticket Data
     React.useEffect(() => {
-        const getData = async () => {
-            const response: AxiosResponse = await axios.get('api/tickets');
-            if (response.status === 200) {
-                setTicketData(response.data);
-                console.log(response.data[1].attachment);
+        axios.get("/api/tickets")
+            .then((res) => {
+                console.log(res.data.tickets)
+                setFilteredTickets(res.data.tickets);
+            })
+            .catch((err) => {
+                console.error("Error fetching tickets:", err);
             }
-        }
-
-        getData();
-    }, [])
+            )
+            ;
+    }, []);
 
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
