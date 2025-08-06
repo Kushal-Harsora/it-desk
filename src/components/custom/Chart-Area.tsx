@@ -27,74 +27,75 @@ import {
     ToggleGroup,
     ToggleGroupItem,
 } from "@/components/ui/toggle-group"
+import { PriorityGrouped, StatusGrouped } from "@/const/constVal"
 
-const status = [
-    { date: "2025-08-05", OPEN: 8, IN_PROGRESS: 4, RESOLVED: 5, CLOSED: 3 },
-    { date: "2025-08-04", OPEN: 5, IN_PROGRESS: 6, RESOLVED: 2, CLOSED: 4 },
-    { date: "2025-08-03", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 6, CLOSED: 2 },
-    { date: "2025-08-02", OPEN: 6, IN_PROGRESS: 5, RESOLVED: 4, CLOSED: 1 },
-    { date: "2025-08-01", OPEN: 9, IN_PROGRESS: 2, RESOLVED: 3, CLOSED: 2 },
-    { date: "2025-07-31", OPEN: 4, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 3 },
-    { date: "2025-07-30", OPEN: 6, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 1 },
-    { date: "2025-07-29", OPEN: 7, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 2 },
-    { date: "2025-07-28", OPEN: 5, IN_PROGRESS: 5, RESOLVED: 3, CLOSED: 3 },
-    { date: "2025-07-27", OPEN: 6, IN_PROGRESS: 3, RESOLVED: 2, CLOSED: 4 },
-    { date: "2025-07-26", OPEN: 8, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 2 },
-    { date: "2025-07-25", OPEN: 4, IN_PROGRESS: 6, RESOLVED: 3, CLOSED: 1 },
-    { date: "2025-07-24", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 2 },
-    { date: "2025-07-23", OPEN: 6, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 3 },
-    { date: "2025-07-22", OPEN: 5, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 2 },
-    { date: "2025-07-21", OPEN: 9, IN_PROGRESS: 1, RESOLVED: 3, CLOSED: 2 },
-    { date: "2025-07-20", OPEN: 6, IN_PROGRESS: 5, RESOLVED: 4, CLOSED: 1 },
-    { date: "2025-07-19", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 2, CLOSED: 4 },
-    { date: "2025-07-18", OPEN: 5, IN_PROGRESS: 4, RESOLVED: 5, CLOSED: 2 },
-    { date: "2025-07-17", OPEN: 6, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 3 },
-    { date: "2025-07-16", OPEN: 4, IN_PROGRESS: 6, RESOLVED: 3, CLOSED: 1 },
-    { date: "2025-07-15", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 2 },
-    { date: "2025-07-14", OPEN: 8, IN_PROGRESS: 2, RESOLVED: 4, CLOSED: 3 },
-    { date: "2025-07-13", OPEN: 5, IN_PROGRESS: 5, RESOLVED: 2, CLOSED: 3 },
-    { date: "2025-07-12", OPEN: 6, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 1 },
-    { date: "2025-07-11", OPEN: 9, IN_PROGRESS: 3, RESOLVED: 3, CLOSED: 2 },
-    { date: "2025-07-10", OPEN: 4, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 3 },
-    { date: "2025-07-09", OPEN: 6, IN_PROGRESS: 5, RESOLVED: 3, CLOSED: 1 },
-    { date: "2025-07-08", OPEN: 7, IN_PROGRESS: 2, RESOLVED: 4, CLOSED: 2 },
-    { date: "2025-07-07", OPEN: 5, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 3 },
-    { date: "2025-07-06", OPEN: 6, IN_PROGRESS: 4, RESOLVED: 2, CLOSED: 4 },
-];
+// const status = [
+//     { date: "2025-08-05", OPEN: 8, IN_PROGRESS: 4, RESOLVED: 5, CLOSED: 3 },
+//     { date: "2025-08-04", OPEN: 5, IN_PROGRESS: 6, RESOLVED: 2, CLOSED: 4 },
+//     { date: "2025-08-03", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 6, CLOSED: 2 },
+//     { date: "2025-08-02", OPEN: 6, IN_PROGRESS: 5, RESOLVED: 4, CLOSED: 1 },
+//     { date: "2025-08-01", OPEN: 9, IN_PROGRESS: 2, RESOLVED: 3, CLOSED: 2 },
+//     { date: "2025-07-31", OPEN: 4, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 3 },
+//     { date: "2025-07-30", OPEN: 6, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 1 },
+//     { date: "2025-07-29", OPEN: 7, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 2 },
+//     { date: "2025-07-28", OPEN: 5, IN_PROGRESS: 5, RESOLVED: 3, CLOSED: 3 },
+//     { date: "2025-07-27", OPEN: 6, IN_PROGRESS: 3, RESOLVED: 2, CLOSED: 4 },
+//     { date: "2025-07-26", OPEN: 8, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 2 },
+//     { date: "2025-07-25", OPEN: 4, IN_PROGRESS: 6, RESOLVED: 3, CLOSED: 1 },
+//     { date: "2025-07-24", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 2 },
+//     { date: "2025-07-23", OPEN: 6, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 3 },
+//     { date: "2025-07-22", OPEN: 5, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 2 },
+//     { date: "2025-07-21", OPEN: 9, IN_PROGRESS: 1, RESOLVED: 3, CLOSED: 2 },
+//     { date: "2025-07-20", OPEN: 6, IN_PROGRESS: 5, RESOLVED: 4, CLOSED: 1 },
+//     { date: "2025-07-19", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 2, CLOSED: 4 },
+//     { date: "2025-07-18", OPEN: 5, IN_PROGRESS: 4, RESOLVED: 5, CLOSED: 2 },
+//     { date: "2025-07-17", OPEN: 6, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 3 },
+//     { date: "2025-07-16", OPEN: 4, IN_PROGRESS: 6, RESOLVED: 3, CLOSED: 1 },
+//     { date: "2025-07-15", OPEN: 7, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 2 },
+//     { date: "2025-07-14", OPEN: 8, IN_PROGRESS: 2, RESOLVED: 4, CLOSED: 3 },
+//     { date: "2025-07-13", OPEN: 5, IN_PROGRESS: 5, RESOLVED: 2, CLOSED: 3 },
+//     { date: "2025-07-12", OPEN: 6, IN_PROGRESS: 4, RESOLVED: 4, CLOSED: 1 },
+//     { date: "2025-07-11", OPEN: 9, IN_PROGRESS: 3, RESOLVED: 3, CLOSED: 2 },
+//     { date: "2025-07-10", OPEN: 4, IN_PROGRESS: 2, RESOLVED: 6, CLOSED: 3 },
+//     { date: "2025-07-09", OPEN: 6, IN_PROGRESS: 5, RESOLVED: 3, CLOSED: 1 },
+//     { date: "2025-07-08", OPEN: 7, IN_PROGRESS: 2, RESOLVED: 4, CLOSED: 2 },
+//     { date: "2025-07-07", OPEN: 5, IN_PROGRESS: 3, RESOLVED: 5, CLOSED: 3 },
+//     { date: "2025-07-06", OPEN: 6, IN_PROGRESS: 4, RESOLVED: 2, CLOSED: 4 },
+// ];
 
-const priority = [
-    { date: "2025-08-05", LOW: 4, MEDIUM: 6, HIGH: 2 },
-    { date: "2025-08-04", LOW: 5, MEDIUM: 3, HIGH: 3 },
-    { date: "2025-08-03", LOW: 6, MEDIUM: 4, HIGH: 2 },
-    { date: "2025-08-02", LOW: 3, MEDIUM: 5, HIGH: 4 },
-    { date: "2025-08-01", LOW: 4, MEDIUM: 4, HIGH: 4 },
-    { date: "2025-07-31", LOW: 7, MEDIUM: 2, HIGH: 2 },
-    { date: "2025-07-30", LOW: 3, MEDIUM: 6, HIGH: 2 },
-    { date: "2025-07-29", LOW: 5, MEDIUM: 3, HIGH: 3 },
-    { date: "2025-07-28", LOW: 4, MEDIUM: 4, HIGH: 3 },
-    { date: "2025-07-27", LOW: 6, MEDIUM: 2, HIGH: 3 },
-    { date: "2025-07-26", LOW: 5, MEDIUM: 5, HIGH: 1 },
-    { date: "2025-07-25", LOW: 4, MEDIUM: 3, HIGH: 4 },
-    { date: "2025-07-24", LOW: 3, MEDIUM: 6, HIGH: 2 },
-    { date: "2025-07-23", LOW: 6, MEDIUM: 3, HIGH: 2 },
-    { date: "2025-07-22", LOW: 4, MEDIUM: 4, HIGH: 3 },
-    { date: "2025-07-21", LOW: 5, MEDIUM: 2, HIGH: 4 },
-    { date: "2025-07-20", LOW: 4, MEDIUM: 5, HIGH: 2 },
-    { date: "2025-07-19", LOW: 6, MEDIUM: 2, HIGH: 3 },
-    { date: "2025-07-18", LOW: 3, MEDIUM: 4, HIGH: 4 },
-    { date: "2025-07-17", LOW: 5, MEDIUM: 5, HIGH: 1 },
-    { date: "2025-07-16", LOW: 4, MEDIUM: 3, HIGH: 3 },
-    { date: "2025-07-15", LOW: 6, MEDIUM: 2, HIGH: 3 },
-    { date: "2025-07-14", LOW: 3, MEDIUM: 5, HIGH: 3 },
-    { date: "2025-07-13", LOW: 5, MEDIUM: 3, HIGH: 3 },
-    { date: "2025-07-12", LOW: 4, MEDIUM: 4, HIGH: 3 },
-    { date: "2025-07-11", LOW: 7, MEDIUM: 1, HIGH: 3 },
-    { date: "2025-07-10", LOW: 5, MEDIUM: 4, HIGH: 2 },
-    { date: "2025-07-09", LOW: 6, MEDIUM: 3, HIGH: 2 },
-    { date: "2025-07-08", LOW: 4, MEDIUM: 4, HIGH: 3 },
-    { date: "2025-07-07", LOW: 5, MEDIUM: 5, HIGH: 1 },
-    { date: "2025-07-06", LOW: 3, MEDIUM: 6, HIGH: 2 }
-]
+// const priority = [
+//     { date: "2025-08-05", LOW: 4, MEDIUM: 6, HIGH: 2 },
+//     { date: "2025-08-04", LOW: 5, MEDIUM: 3, HIGH: 3 },
+//     { date: "2025-08-03", LOW: 6, MEDIUM: 4, HIGH: 2 },
+//     { date: "2025-08-02", LOW: 3, MEDIUM: 5, HIGH: 4 },
+//     { date: "2025-08-01", LOW: 4, MEDIUM: 4, HIGH: 4 },
+//     { date: "2025-07-31", LOW: 7, MEDIUM: 2, HIGH: 2 },
+//     { date: "2025-07-30", LOW: 3, MEDIUM: 6, HIGH: 2 },
+//     { date: "2025-07-29", LOW: 5, MEDIUM: 3, HIGH: 3 },
+//     { date: "2025-07-28", LOW: 4, MEDIUM: 4, HIGH: 3 },
+//     { date: "2025-07-27", LOW: 6, MEDIUM: 2, HIGH: 3 },
+//     { date: "2025-07-26", LOW: 5, MEDIUM: 5, HIGH: 1 },
+//     { date: "2025-07-25", LOW: 4, MEDIUM: 3, HIGH: 4 },
+//     { date: "2025-07-24", LOW: 3, MEDIUM: 6, HIGH: 2 },
+//     { date: "2025-07-23", LOW: 6, MEDIUM: 3, HIGH: 2 },
+//     { date: "2025-07-22", LOW: 4, MEDIUM: 4, HIGH: 3 },
+//     { date: "2025-07-21", LOW: 5, MEDIUM: 2, HIGH: 4 },
+//     { date: "2025-07-20", LOW: 4, MEDIUM: 5, HIGH: 2 },
+//     { date: "2025-07-19", LOW: 6, MEDIUM: 2, HIGH: 3 },
+//     { date: "2025-07-18", LOW: 3, MEDIUM: 4, HIGH: 4 },
+//     { date: "2025-07-17", LOW: 5, MEDIUM: 5, HIGH: 1 },
+//     { date: "2025-07-16", LOW: 4, MEDIUM: 3, HIGH: 3 },
+//     { date: "2025-07-15", LOW: 6, MEDIUM: 2, HIGH: 3 },
+//     { date: "2025-07-14", LOW: 3, MEDIUM: 5, HIGH: 3 },
+//     { date: "2025-07-13", LOW: 5, MEDIUM: 3, HIGH: 3 },
+//     { date: "2025-07-12", LOW: 4, MEDIUM: 4, HIGH: 3 },
+//     { date: "2025-07-11", LOW: 7, MEDIUM: 1, HIGH: 3 },
+//     { date: "2025-07-10", LOW: 5, MEDIUM: 4, HIGH: 2 },
+//     { date: "2025-07-09", LOW: 6, MEDIUM: 3, HIGH: 2 },
+//     { date: "2025-07-08", LOW: 4, MEDIUM: 4, HIGH: 3 },
+//     { date: "2025-07-07", LOW: 5, MEDIUM: 5, HIGH: 1 },
+//     { date: "2025-07-06", LOW: 3, MEDIUM: 6, HIGH: 2 }
+// ]
 
 const chartConfig = {
     Tickets: {
@@ -130,7 +131,12 @@ const chartConfig = {
     }
 } satisfies ChartConfig
 
-export function ChartArea() {
+interface ChartProps {
+    status: StatusGrouped[],
+    priority: PriorityGrouped[]
+}
+
+export const ChartArea: React.FC<ChartProps> = (props) => {
     const isMobile = useIsMobile()
     const [timeRange, setTimeRange] = React.useState("30d");
 
@@ -143,7 +149,7 @@ export function ChartArea() {
     }, [isMobile])
 
     const filteredData = React.useMemo(() => {
-        const data = chartField === "priority" ? priority : status;
+        const data = chartField === "priority" ? props.priority : props.status;
         const referenceDate = new Date();
         let daysToSubtract = 90;
 
@@ -160,7 +166,7 @@ export function ChartArea() {
             const date = new Date(item.date);
             return date >= startDate;
         });
-    }, [chartField, timeRange]);
+    }, [chartField, timeRange, props.priority, props.status]);
 
     return (
         <section className=" px-[2.5vw]">

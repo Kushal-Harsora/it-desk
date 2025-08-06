@@ -74,23 +74,13 @@ import { toast } from "sonner"
 // Icon, Style and consts imports
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import axios, { AxiosResponse } from "axios"
-import { Priority, Status } from "@prisma/client"
 import { ChartArea } from "@/components/custom/Chart-Area"
 import { Label } from "@/components/ui/label"
-import { timeZone } from '@/const/constVal'
+import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
 
 // Ticket Type Definition
-export type Ticket = {
-    title: string
-    priority: string,
-    status: Status,
-    ticket: string,
-    description: string,
-    createdAt: Date,
-    updatedAt: Date,
-    attachment: string
-}
+import { Ticket } from "@/const/constVal"
 
 // Create Ticket Form Schema
 const TicketSchema = z.object({
@@ -344,6 +334,9 @@ export default function Page() {
 
     const [open, setOpen] = React.useState(false);
     const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
+    const [loading, setLoading] = React.useState<boolean>(true);
+    const [status, setStatus] = React.useState<StatusGrouped[]>([]);
+    const [priority, setPriority] = React.useState<PriorityGrouped[]>([]);
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
@@ -380,15 +373,30 @@ export default function Page() {
     // Get the Ticket Data
     React.useEffect(() => {
         const getData = async () => {
-            const response: AxiosResponse = await axios.get('api/tickets');
-            if (response.status === 200) {
-                setTicketData(response.data);
-                console.log(response.data);
+            const response_ticket: AxiosResponse = await axios.get('api/tickets');
+            if (response_ticket.status === 200) {
+                setTicketData(response_ticket.data);
+                console.log(response_ticket.data);
+            }
+
+            const response_chart: AxiosResponse = await axios.get('api/chart');
+            if (response_chart.status === 200) {
+                setStatus(response_chart.data.status);
+                setPriority(response_chart.data.priority);
+            }
+
+            if (response_chart.status === 200 && response_ticket.status === 200) {
+                setLoading(false);
             }
         }
 
         getData();
-    }, [])
+    }, []);
+
+    React.useEffect(() => {
+        console.log("Priority", priority);
+        console.log("Status", status);
+    }, [status, priority]);
 
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
@@ -439,9 +447,11 @@ export default function Page() {
 
     }
 
+    if (loading) return <div className=" flex-1 h-full overflow-hidden flex items-center justify-center">Loading ticket</div>
+
     return (
         <main className="flex-1 h-fit items-center justify-center max-md:px-[3.5vw]">
-            <ChartArea />
+            <ChartArea priority={priority} status={status} />
             <div className="w-full h-full px-[2.5vw] flex flex-col items-center justify-center gap-2">
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
@@ -457,7 +467,7 @@ export default function Page() {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="ml-auto">
-                                Columns <ChevronDown />
+                                Customize Columns <ChevronDown />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">

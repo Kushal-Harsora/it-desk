@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table"
 import { cn } from "@/lib/utils"
 
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Eye } from "lucide-react"
+import { ArrowUpDown, ChevronDown, Eye } from "lucide-react"
 
 
 type Ticket = {
