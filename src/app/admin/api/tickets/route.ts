@@ -84,20 +84,14 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const start = searchParams.get('start');
     const end = searchParams.get('end');
-
+    console.log("Inside the get request!!!")
     let where = {};
 
     if (start && end) {
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
-
       where = {
         createdAt: {
-          gte: toZonedTime(startDate, timeZone),
-          lte: toZonedTime(endDate, timeZone),
+          gte: new Date(start),
+          lte: new Date(end),
         },
       };
     }
@@ -107,15 +101,12 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-    });
-
-    return NextResponse.json({ tickets }, { status: 200 });
+    });    return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
 
 
 

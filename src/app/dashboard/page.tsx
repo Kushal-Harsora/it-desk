@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format, toZonedTime } from 'date-fns-tz'
+import axios, { AxiosResponse } from "axios"
 
 
 // Component imports
@@ -67,15 +68,20 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
+import { ChartArea } from "@/components/custom/Chart-Area"
 // import { Checkbox } from "@/components/ui/checkbox"
 
 // Icon, Style and consts imports
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
-import axios, { AxiosResponse } from "axios"
-import { ChartArea } from "@/components/custom/Chart-Area"
-import { Label } from "@/components/ui/label"
+import { ArrowUpDown, CalendarIcon, ChevronDown, MoreHorizontal } from "lucide-react"
 import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
 
@@ -93,6 +99,17 @@ const TicketSchema = z.object({
     attachProof: z.instanceof(File).optional(),
     priority: z.string()
 });
+
+const CalendarSchema = z.object({
+    dateRange: z.object({
+        from: z.date({
+            error: "Start date is required",
+        }),
+        to: z.date({
+            error: "End date is required",
+        }),
+    }),
+})
 
 const columns: ColumnDef<Ticket>[] = [
     // {
@@ -332,7 +349,18 @@ export default function Page() {
         },
     });
 
+    const formCalendar = useForm({
+        resolver: zodResolver(CalendarSchema),
+        defaultValues: {
+            dateRange: {
+                from: toZonedTime(new Date(), timeZone),
+                to: toZonedTime(new Date(), timeZone),
+            },
+        },
+    });
+
     const [openTicket, setOpenTicket] = React.useState(false);
+    const [openCalendar, setOpenCalendar] = React.useState(false);
     const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
     const [loading, setLoading] = React.useState<boolean>(true);
     const [status, setStatus] = React.useState<StatusGrouped[]>([]);
@@ -442,156 +470,244 @@ export default function Page() {
 
     }
 
+    const onSubmitCalendar = async (data: { dateRange: { from: Date; to: Date } }) => {
+        try {
+            const from = toZonedTime(new Date(data.dateRange.from.toISOString()), timeZone);
+            const to = toZonedTime(new Date(data.dateRange.to.toISOString()), timeZone);
+
+            const res = await axios.get(`/api/tickets?start=${from}&end=${to}`);
+            setTicketData(res.data.tickets);
+            setOpenCalendar(false);
+        } catch (error) {
+            console.error("Error fetching filtered tickets:", error);
+        }
+    }
+
     if (loading) return <div className=" flex-1 h-full overflow-hidden flex items-center justify-center">Loading ticket</div>
 
     return (
         <main className="flex-1 h-fit items-center justify-center max-md:px-[3.5vw]">
             <ChartArea priority={priority} status={status} />
             <div className="w-full h-full px-[2.5vw] flex flex-col items-center justify-center gap-2">
-                <div className="w-full flex justify-evenly items-center gap-2 py-4">
-                    <Input
-                        placeholder="Filter tickets..."
-                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn("title")?.setFilterValue(event.target.value)
-                        }
-                        className="max-w-sm"
-                    />
+                <div className="h-fit w-full flex max-md:flex-col justify-evenly items-center gap-2 py-4">
+                    <div className="w-full max-md:w-fit flex max-md:flex-row justify-between items-center gap-2.5">
+                        <Input
+                            placeholder="Filter tickets..."
+                            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+                            onChange={(event) =>
+                                table.getColumn("title")?.setFilterValue(event.target.value)
+                            }
+                            className="w-full max-w-md"
+                        />
 
-                    <span className="max-md:hidden px-6 w-fit">
-                        Total Tickets - <span className="font-bold">{TicketData.length}</span>
-                    </span>
+                        <span className="max-md:text-xs text-center px-6 max-md:px-0 w-full">
+                            Total Tickets - <strong>{TicketData.length}</strong>
+                        </span>
+                    </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto max-md:text-xs">
-                                Customize Columns <ChevronDown />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => {
-                                    return (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            className="capitalize"
-                                            checked={column.getIsVisible()}
-                                            onCheckedChange={(value) =>
-                                                column.toggleVisibility(!!value)
-                                            }
-                                        >
-                                            {(() => {
-                                                switch (column.id) {
-                                                    case "createdAt":
-                                                        return "Date of Creation";
-                                                    case "updatedAt":
-                                                        return "Last Updated";
-                                                    default:
-                                                        return column.id;
+                    <div className=" w-fit h-fit flex flex-row justify-evenly items-center gap-1">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="ml-auto max-md:text-xs">
+                                    Customize Columns <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => {
+                                        return (
+                                            <DropdownMenuCheckboxItem
+                                                key={column.id}
+                                                className="capitalize"
+                                                checked={column.getIsVisible()}
+                                                onCheckedChange={(value) =>
+                                                    column.toggleVisibility(!!value)
                                                 }
-                                            })()}
-                                        </DropdownMenuCheckboxItem>
-                                    )
-                                })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                            >
+                                                {(() => {
+                                                    switch (column.id) {
+                                                        case "createdAt":
+                                                            return "Date of Creation";
+                                                        case "updatedAt":
+                                                            return "Last Updated";
+                                                        default:
+                                                            return column.id;
+                                                    }
+                                                })()}
+                                            </DropdownMenuCheckboxItem>
+                                        )
+                                    })}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                    <Dialog open={openTicket} onOpenChange={setOpenTicket}>
-                        <DialogTrigger asChild>
-                            <Button className=" max-md:text-xs" variant={'default'}>Create Ticket</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-sm:max-w-4/5 w-full">
-                            <DialogHeader>
-                                <DialogTitle>Ticket</DialogTitle>
-                                <DialogDescription>
-                                    Enter the ticket details here. Click save when you&apos;re done.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="title"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ticket Title</FormLabel>
-                                                <FormControl>
-                                                    <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="description"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ticket Description</FormLabel>
-                                                <FormControl>
-                                                    <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="attachProof"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Attach PDF/Image</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        accept=".pdf, image/*"
-                                                        type="file"
-                                                        onChange={e => {
-                                                            const file = e.target.files?.[0];
-                                                            field.onChange(file);
-                                                        }}
-                                                        onBlur={field.onBlur}
-                                                        name={field.name}
-                                                        ref={field.ref}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="priority"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Priority</FormLabel>
-                                                <FormControl>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select ticket priority" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                <SelectLabel>Ticket Priority</SelectLabel>
-                                                                <SelectItem value="HIGH">High</SelectItem>
-                                                                <SelectItem value="MEDIUM">Medium</SelectItem>
-                                                                <SelectItem value="LOW">Low</SelectItem>
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <DialogFooter>
-                                        <Button type="submit">Create Ticket</Button>
-                                    </DialogFooter>
-                                </form>
-                            </Form>
-                        </DialogContent>
-                    </Dialog>
+                        <Dialog open={openCalendar} onOpenChange={setOpenCalendar}>
+                            <DialogTrigger className="mr-auto cursor-pointer w-fit" asChild>
+                                <Button variant="outline" className="ml-auto max-md:text-xs">
+                                    Filter
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className=" w-full h-fit flex flex-col justify-center items-center">
+                                <DialogHeader>
+                                    <DialogTitle className=" text-center">
+                                        Filter Out the Dates of Tickets
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <Form {...formCalendar}>
+                                    <form onSubmit={formCalendar.handleSubmit(onSubmitCalendar)} className="space-y-8">
+                                        <FormField
+                                            control={formCalendar.control}
+                                            name="dateRange"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-col w-full h-full">
+                                                    <FormLabel className=" text-center">Select the Range of Date</FormLabel>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <FormControl>
+                                                                <Button
+                                                                    variant={"outline"}
+                                                                    className={cn(
+                                                                        "w-[270px] pl-3 text-left font-normal",
+                                                                        !field.value?.from && "text-muted-foreground"
+                                                                    )}
+                                                                >
+                                                                    {field.value?.from ? (
+                                                                        field.value.to ? (
+                                                                            <>
+                                                                                {format(field.value.from, "PPP")} – {format(field.value.to, "PPP")}
+                                                                            </>
+                                                                        ) : (
+                                                                            format(field.value.from, "PPP")
+                                                                        )
+                                                                    ) : (
+                                                                        <span>Pick a date range</span>
+                                                                    )}
+                                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                                </Button>
+
+                                                            </FormControl>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                mode="range"
+                                                                selected={field.value}
+                                                                onSelect={field.onChange}
+                                                                disabled={(date) =>
+                                                                    date > new Date() || date < new Date("1900-01-01")
+                                                                }
+                                                                captionLayout="dropdown"
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <Button className="w-full" type="submit">
+                                            Submit
+                                        </Button>
+                                    </form>
+                                </Form>
+                            </DialogContent>
+                        </Dialog>
+
+                        <Dialog open={openTicket} onOpenChange={setOpenTicket}>
+                            <DialogTrigger className="mr-auto cursor-pointer w-fit" asChild>
+                                <Button className=" max-md:text-xs" variant={'default'}>Create Ticket</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-sm:max-w-4/5 w-full">
+                                <DialogHeader>
+                                    <DialogTitle>Ticket</DialogTitle>
+                                    <DialogDescription>
+                                        Enter the ticket details here. Click save when you&apos;re done.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="title"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Ticket Title</FormLabel>
+                                                    <FormControl>
+                                                        <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="description"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Ticket Description</FormLabel>
+                                                    <FormControl>
+                                                        <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="attachProof"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Attach PDF/Image</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            accept=".pdf, image/*"
+                                                            type="file"
+                                                            onChange={e => {
+                                                                const file = e.target.files?.[0];
+                                                                field.onChange(file);
+                                                            }}
+                                                            onBlur={field.onBlur}
+                                                            name={field.name}
+                                                            ref={field.ref}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="priority"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Priority</FormLabel>
+                                                    <FormControl>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder="Select ticket priority" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectGroup>
+                                                                    <SelectLabel>Ticket Priority</SelectLabel>
+                                                                    <SelectItem value="HIGH">High</SelectItem>
+                                                                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                                                                    <SelectItem value="LOW">Low</SelectItem>
+                                                                </SelectGroup>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <DialogFooter>
+                                            <Button type="submit">Create Ticket</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </Form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
                 <div className=" w-full rounded-md border">
                     <Table>
