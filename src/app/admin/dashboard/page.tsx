@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table"
 import { cn } from "@/lib/utils"
 
-import { ArrowUpDown, ChevronDown, MoreHorizontal , Eye } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Eye } from "lucide-react"
 
 
 type Ticket = {
@@ -47,6 +47,25 @@ export default function AdminDashboard() {
 
         fetchTickets()
     }, [])
+
+    // Filter button to get filtered tickets based on monthly, weekly....
+    const handleFilter = async (type: string) => {
+        setLoading(true)
+        try {
+            const url = type === "all" ? "/api/tickets" : `/api/tickets?filter=${type}`
+            const res = await fetch(url, {
+                method: "GET",
+                credentials: "include",
+            })
+            const data = await res.json()
+            setTickets(data)
+        } catch (error) {
+            console.error("Error fetching filtered tickets:", error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
 
     const columns: ColumnDef<Ticket>[] = [
         {
@@ -140,6 +159,23 @@ export default function AdminDashboard() {
                 <h1 className=" text-5xl max-lg:text-3xl font-bold">
                     Admin Dashboard 🎟️
                 </h1>
+
+
+
+                {/* <div className="flex gap-2 mb-4">
+                    <button onClick={() => handleFilter("weekly")} className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer">
+                        Weekly
+                    </button>
+                    <button onClick={() => handleFilter("monthly")} className="px-4 py-2 bg-green-500 text-white rounded cursor-pointer">
+                        Monthly
+                    </button>
+                    <button onClick={() => handleFilter("all")} className="px-4 py-2 bg-gray-500 text-white rounded cursor-pointer">
+                        All
+                    </button>
+                </div> */}
+
+
+
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
@@ -149,6 +185,26 @@ export default function AdminDashboard() {
                         }
                         className="max-w-sm"
                     />
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="flex justify-evenly items-center gap-2 py-4">
+                                Filter <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuCheckboxItem className="cursor-pointer" onCheckedChange={() => handleFilter("all")}>
+                                All
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem className="cursor-pointer" onCheckedChange={() => handleFilter("weekly")}>
+                                Weekly
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem className="cursor-pointer" onCheckedChange={() => handleFilter("monthly")}>
+                                Monthly
+                            </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="ml-auto">
