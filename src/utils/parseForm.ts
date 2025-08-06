@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import formidable, { Fields, Files } from 'formidable';
 import { Readable } from 'stream';
+import { IncomingMessage } from 'http';
 
 // Disable Next.js body parser (important for file uploads)
 // utils/parseForm.ts
@@ -33,7 +34,7 @@ export async function parseForm(req: NextRequest): Promise<{ fields: Fields; fil
   });
 
   return new Promise((resolve, reject) => {
-    form.parse(fakeReq as any, (err, fields, files) => {
+    form.parse(fakeReq as IncomingMessage, (err, fields, files) => {
       if (err) reject(err);
       else resolve({ fields, files });
     });
