@@ -45,9 +45,9 @@ model Technician {
   name      String
   email     String     @unique
   password  String
-  createdAt DateTime @default(now())
-  comments Comment[]
-  tickets  Ticket[]
+  createdAt DateTime   @default(now())
+  comments  Comment[]
+  tickets   Ticket[]
 }
 
 model Admin {
@@ -57,6 +57,8 @@ model Admin {
   password  String
   createdAt DateTime @default(now())
 }
+
+
 
 enum Priority {
   LOW

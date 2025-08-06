@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseForm(req);
 
+    console.log("Fields:", fields);
+
+
     const title = fields.title?.[0] || '';
     const description = fields.description?.[0] || '';
     const priority = fields.priority?.[0] || '';
@@ -35,12 +38,12 @@ export async function POST(req: NextRequest) {
       const file = files.attachProof[0];
       fileName = `${uuid()}-${title}-${file.originalFilename}`
 
-  //     await s3.send(new PutObjectCommand({
-  //   Bucket: 'your-bucket-name',
-  //   Key: newFileName,
-  //   Body: fs.createReadStream(file.filepath),
-  //   ContentType: file.mimetype,
-  // }));
+      //     await s3.send(new PutObjectCommand({
+      //   Bucket: 'your-bucket-name',
+      //   Key: newFileName,
+      //   Body: fs.createReadStream(file.filepath),
+      //   ContentType: file.mimetype,
+      // }));
     }
 
     const ticket = await prisma.ticket.create({
@@ -57,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (ticket) {
       return NextResponse.json({
         message: "Ticket created successfully"
-      }, { 
+      }, {
         status: 201
       });
     } else {
@@ -76,12 +79,52 @@ export async function POST(req: NextRequest) {
 }
 
 
-export async function GET() {
-  const tickets = await prisma.ticket.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
 
-  return NextResponse.json(tickets, { status: 200 });
+
+import { subDays } from 'date-fns'
+export async function GET(req: NextRequest) {
+  const filter = req.nextUrl.searchParams.get('filter')
+  const now = new Date()
+
+
+
+  let whereClause = {}
+
+if (filter === 'weekly') {
+  console.log("Weekly tickets !!!!!!!!!!!!!!")
+  whereClause = {
+    createdAt: {
+      gte: subDays(now, 7),
+      lte: now,
+    },
+  }
+  console.log("After : -")
+} else if (filter === 'monthly') {
+  console.log("Monthly tickets !!!!!!!!!!!!!!")
+  whereClause = {
+    createdAt: {
+      gte: subDays(now, 30),
+      lte: now,
+    },
+  }
+
+}
+console.log("Now:", now.toISOString())
+console.log("Filter:", filter)
+console.log("Where Clause:", JSON.stringify(whereClause, null, 2))
+
+  const tickets = await prisma.ticket.findMany({
+    where: whereClause,
+    orderBy: {
+      createdAt: 'asc',
+    },
+    
+  })
+  console.log("All tickets !!!!!!!!!!!!!!")
+  // console.log(tickets.map(t => t.createdAt))
+
+  
+  return NextResponse.json(tickets)
 }
 
 

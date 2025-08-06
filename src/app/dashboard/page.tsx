@@ -83,7 +83,7 @@ import { timeZone } from '@/const/constVal'
 // Ticket Type Definition
 export type Ticket = {
     title: string
-    priority: Priority,
+    priority: string,
     status: Status,
     ticket: string,
     description: string,
@@ -101,9 +101,7 @@ const TicketSchema = z.object({
         message: "Problem description is required"
     }),
     attachProof: z.instanceof(File).optional(),
-    priority: z.enum(Priority, {
-        message: "Priority is required"
-    })
+    priority: z.string()
 });
 
 const columns: ColumnDef<Ticket>[] = [
@@ -397,7 +395,7 @@ export default function Page() {
         const formData = new FormData();
         formData.append("title", values.title)
         formData.append("description", values.description);
-        formData.append("priority", values.priority);
+        formData.append("priority", values.priority.toLowerCase());
         if (values.attachProof != undefined)
             formData.append("attachProof", values.attachProof);
         try {
@@ -454,6 +452,8 @@ export default function Page() {
                         }
                         className="max-w-sm"
                     />
+                
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="ml-auto">
