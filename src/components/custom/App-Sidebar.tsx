@@ -17,6 +17,7 @@ import { Button } from "../ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import axios, { AxiosResponse } from "axios";
+import React from "react";
 
 // Menu items.
 const items = [
@@ -32,13 +33,19 @@ const items = [
   },
 ]
 
-export function AppSidebar() {
+interface props {
+  title: string,
+  logout: string,
+  logoutpath: string
+}
+
+export const AppSidebar: React.FC<props> = (props) => {
 
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      const response: AxiosResponse = await axios.get('api/auth/logout');
+      const response: AxiosResponse = await axios.get(`${props.logout}`);
       const data = response.data
       if (data && response.status === 200) {
         toast.success(data.message || "Logout successful", {
@@ -52,7 +59,7 @@ export function AppSidebar() {
 
         window.localStorage.removeItem("name");
         window.localStorage.removeItem("email");
-        router.push("/login");
+        router.push(`${props.logoutpath}`);
       }
     } catch (error) {
       console.error("Error on Logout", error);
@@ -71,7 +78,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Sample Sidebar</SidebarGroupLabel>
+          <SidebarGroupLabel>{props.title}</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col justify-between flex-1 h-full">
             <SidebarMenu>
               {items.map((item) => (

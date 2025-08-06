@@ -375,8 +375,8 @@ export default function Page() {
         const getData = async () => {
             const response_ticket: AxiosResponse = await axios.get('api/tickets');
             if (response_ticket.status === 200) {
-                setTicketData(response_ticket.data);
-                console.log(response_ticket.data);
+                setTicketData(response_ticket.data.tickets);
+                console.log(response_ticket.data.tickets);
             }
 
             const response_chart: AxiosResponse = await axios.get('api/chart');
@@ -392,11 +392,6 @@ export default function Page() {
 
         getData();
     }, []);
-
-    React.useEffect(() => {
-        console.log("Priority", priority);
-        console.log("Status", status);
-    }, [status, priority]);
 
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
