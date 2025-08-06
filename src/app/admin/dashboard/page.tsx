@@ -40,7 +40,14 @@ import {
 
 import axios from "axios"
 
-
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 
 
 type Ticket = {
@@ -55,52 +62,48 @@ type Ticket = {
 export default function AdminDashboard() {
     const [tickets, setTickets] = useState<Ticket[]>([])
     const [loading, setLoading] = useState(true)
+    const [filteredTickets, setFilteredTickets] = useState([]);
 
-    const form = useForm({
-        defaultValues: {
-            dateRange: {
-                from: new Date(),
-                to: new Date(),
-            },
-        },
-    });
 
-    useEffect(() => {
-        const fetchTickets = async () => {
-            try {
-                const res = await fetch("/api/tickets", {
-                    method: "GET",
-                    credentials: "include", // to send cookies if using session auth
-                })
-                const data = await res.json()
-                setTickets(data)
-            } catch (error) {
-                console.error("Error fetching tickets:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
 
-        fetchTickets()
-    }, [])
+
+
+    // useEffect(() => {
+    //     const fetchTickets = async () => {
+    //         try {
+    //             const res = await fetch("/api/tickets", {
+    //                 method: "GET",
+    //                 credentials: "include", // to send cookies if using session auth
+    //             })
+    //             const data = await res.json()
+    //             setTickets(data)
+    //         } catch (error) {
+    //             console.error("Error fetching tickets:", error)
+    //         } finally {
+    //             setLoading(false)
+    //         }
+    //     }
+
+    //     fetchTickets()
+    // }, [])
 
     // Filter button to get filtered tickets based on monthly, weekly....
-    const handleFilter = async (type: string) => {
-        setLoading(true)
-        try {
-            const url = type === "all" ? "/api/tickets" : `/api/tickets?filter=${type}`
-            const res = await fetch(url, {
-                method: "GET",
-                credentials: "include",
-            })
-            const data = await res.json()
-            setTickets(data)
-        } catch (error) {
-            console.error("Error fetching filtered tickets:", error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    // const handleFilter = async (type: string) => {
+    //     setLoading(true)
+    //     try {
+    //         const url = type === "all" ? "/api/tickets" : `/api/tickets?filter=${type}`
+    //         const res = await fetch(url, {
+    //             method: "GET",
+    //             credentials: "include",
+    //         })
+    //         const data = await res.json()
+    //         setTickets(data)
+    //     } catch (error) {
+    //         console.error("Error fetching filtered tickets:", error)
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
 
 
     const columns: ColumnDef<Ticket>[] = [
@@ -180,7 +183,7 @@ export default function AdminDashboard() {
     ]
 
     const table = useReactTable({
-        data: tickets,
+        data: filteredTickets,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
@@ -200,22 +203,38 @@ export default function AdminDashboard() {
         }),
     })
 
+const today = new Date();
+const weekAgo = new Date();
+weekAgo.setDate(today.getDate() - 7);
 
+const form = useForm({
+  resolver: zodResolver(FormSchema),
+  defaultValues: {
+    dateRange: {
+      from: weekAgo,
+      to: today,
+    },
+  },
+});
 
     // this goes in the same component as your <form> and the <Table>
 
-    const [filteredTickets, setFilteredTickets] = useState([]);
 
-useEffect(() => {
-    axios.get("/api/tickets")
-        .then((res) => {
-            console.log(res.data.tickets);
-            setFilteredTickets(res.data.tickets);
-        })
-        .catch((err) => {
-            console.error("Error fetching tickets:", err);
-        });
-}, []);
+    useEffect(() => {
+        axios.get("/api/tickets")
+            .then((res) => {
+                console.log(res.data.tickets)
+                setFilteredTickets(res.data.tickets);
+            })
+            .catch((err) => {
+                console.error("Error fetching tickets:", err);
+            }
+            )
+            .finally(() => {
+                setLoading(false)
+            })
+            ;
+    }, []);
 
     // useReactTable config
     // update this in your `onSubmit`
@@ -258,65 +277,72 @@ useEffect(() => {
                     />
                     {/* Calendar FrontEnd */}
 
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                            <FormField
-                                control={form.control}
-                                name="dateRange"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>Date of birth</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button
-                                                        variant={"outline"}
-                                                        className={cn(
-                                                            "w-[240px] pl-3 text-left font-normal",
-                                                            !field.value?.from && "text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {field.value?.from ? (
-                                                            field.value.to ? (
-                                                                <>
-                                                                    {format(field.value.from, "PPP")} – {format(field.value.to, "PPP")}
-                                                                </>
-                                                            ) : (
-                                                                format(field.value.from, "PPP")
-                                                            )
-                                                        ) : (
-                                                            <span>Pick a date range</span>
-                                                        )}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
+                    <Dialog>
+                        <DialogTrigger className="mr-auto cursor-pointer">Open</DialogTrigger>
+                        <DialogContent>
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                                    <FormField
+                                        control={form.control}
+                                        name="dateRange"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>Date of birth</FormLabel>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <FormControl>
+                                                            <Button
+                                                                variant={"outline"}
+                                                                className={cn(
+                                                                    "w-[270px] pl-3 text-left font-normal",
+                                                                    !field.value?.from && "text-muted-foreground"
+                                                                )}
+                                                            >
+                                                                {field.value?.from ? (
+                                                                    field.value.to ? (
+                                                                        <>
+                                                                            {format(field.value.from, "PPP")} – {format(field.value.to, "PPP")}
+                                                                        </>
+                                                                    ) : (
+                                                                        format(field.value.from, "PPP")
+                                                                    )
+                                                                ) : (
+                                                                    <span>Pick a date range</span>
+                                                                )}
+                                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                            </Button>
 
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="range"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    disabled={(date) =>
-                                                        date > new Date() || date < new Date("1900-01-01")
-                                                    }
-                                                    captionLayout="dropdown"
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
+                                                        </FormControl>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0" align="start">
+                                                        <Calendar
+                                                            mode="range"
+                                                            selected={field.value}
+                                                            onSelect={field.onChange}
+                                                            disabled={(date) =>
+                                                                date > new Date() || date < new Date("1900-01-01")
+                                                            }
+                                                            captionLayout="dropdown"
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
 
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button type="submit">Submit</Button>
-                        </form>
-                    </Form>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <Button type="submit">Submit</Button>
+                                </form>
+                            </Form>
+                        </DialogContent>
+                    </Dialog>
+
+
 
                     {/* Calendar End */}
 
 
-                    <DropdownMenu>
+                    {/* <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="flex justify-evenly items-center gap-2 py-4">
                                 Filter <ChevronDown />
@@ -333,7 +359,7 @@ useEffect(() => {
                                 Monthly
                             </DropdownMenuCheckboxItem>
                         </DropdownMenuContent>
-                    </DropdownMenu>
+                    </DropdownMenu> */}
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

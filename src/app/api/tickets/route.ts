@@ -104,9 +104,7 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-    });
-    console.log(tickets)
-    return NextResponse.json({ tickets }, { status: 200 });
+    });    return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
