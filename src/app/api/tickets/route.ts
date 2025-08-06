@@ -5,6 +5,8 @@ import { v4 as uuid } from 'uuid';
 import { prisma } from '@/db/prisma';
 import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
+import { toZonedTime } from 'date-fns-tz'
+import { timeZone } from '@/const/constVal';
 // import { promises as fs, stat } from 'fs';
 // import { success } from 'zod';
 
@@ -47,8 +49,8 @@ export async function POST(req: NextRequest) {
         priority: Priority[priority.toUpperCase() as keyof typeof Priority] || Priority.LOW,
         title,
         attachment: fileName,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: toZonedTime(new Date(), timeZone),
+        updatedAt: toZonedTime(new Date(), timeZone)
       },
     });
 

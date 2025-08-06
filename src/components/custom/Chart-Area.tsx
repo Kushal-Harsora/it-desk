@@ -162,10 +162,6 @@ export function ChartArea() {
         });
     }, [chartField, timeRange]);
 
-    React.useEffect(() => {
-        console.log(filteredData);
-    }, [filteredData])
-
     return (
         <section className=" px-[2.5vw]">
             <Card className="@container/card">
@@ -189,10 +185,10 @@ export function ChartArea() {
                             </ToggleGroup>
                             <Select value={chartField} onValueChange={(value) => setChartField(value as "status" | "priority")}>
                                 <SelectTrigger
-                                    className="@[767px]/card:hidden flex w-40"
+                                    className="@[767px]/card:hidden flex w-32"
                                     aria-label="Select field"
                                 >
-                                    <SelectValue placeholder="Last 3 months" />
+                                    <SelectValue placeholder="Attribute" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl">
                                     <SelectItem value="priority" className="rounded-lg">
@@ -224,7 +220,7 @@ export function ChartArea() {
                             </ToggleGroup>
                             <Select value={timeRange} onValueChange={setTimeRange}>
                                 <SelectTrigger
-                                    className="@[767px]/card:hidden flex w-40"
+                                    className="@[767px]/card:hidden flex w-32"
                                     aria-label="Select a value"
                                 >
                                     <SelectValue placeholder="Last 3 months" />

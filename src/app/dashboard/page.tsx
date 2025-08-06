@@ -18,6 +18,8 @@ import { z } from 'zod'
 import { useForm } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { format, toZonedTime } from 'date-fns-tz'
+
 
 // Component imports
 import {
@@ -69,11 +71,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 // import { Checkbox } from "@/components/ui/checkbox"
 
-// Icon and Style imports
+// Icon, Style and consts imports
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import axios, { AxiosResponse } from "axios"
 import { Priority, Status } from "@prisma/client"
 import { ChartArea } from "@/components/custom/Chart-Area"
+import { Label } from "@/components/ui/label"
+import { timeZone } from '@/const/constVal'
 
 
 // Ticket Type Definition
@@ -84,6 +88,7 @@ export type Ticket = {
     ticket: string,
     description: string,
     createdAt: Date,
+    updatedAt: Date,
     attachment: string
 }
 
@@ -179,6 +184,52 @@ const columns: ColumnDef<Ticket>[] = [
                 'text-yellow-500': priority === 'MEDIUM',
                 'text-green-500': priority === 'LOW',
             })}>{priority}</div>
+        },
+    },
+    {
+        accessorKey: "createdAt",
+        header: ({ column }) => {
+            return (
+                <div className="w-fit">
+                    <Button
+                        className="w-fit text-center"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Date of Creation
+                        <ArrowUpDown />
+                    </Button>
+                </div>
+            )
+        },
+        cell: ({ row }) => {
+            const createdAt: Date = row.getValue("createdAt");
+            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+            return <div className='font-medium text-center'>{formattedDate}</div>
+        },
+    },
+    {
+        accessorKey: "updatedAt",
+        header: ({ column }) => {
+            return (
+                <div className="w-fit">
+                    <Button
+                        className="w-fit text-center"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Last Updated
+                        <ArrowUpDown />
+                    </Button>
+                </div>
+            )
+        },
+        cell: ({ row }) => {
+            const createdAt: Date = row.getValue("updatedAt");
+            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+            return <div className='font-medium text-center'>{formattedDate}</div>
         },
     },
     {
@@ -301,7 +352,7 @@ export default function Page() {
     )
     const [pagination, setPagination] = React.useState({
         pageIndex: 0,
-        pageSize: 8,
+        pageSize: 5,
     });
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
@@ -334,7 +385,7 @@ export default function Page() {
             const response: AxiosResponse = await axios.get('api/tickets');
             if (response.status === 200) {
                 setTicketData(response.data);
-                console.log(response.data[1].attachment);
+                console.log(response.data);
             }
         }
 
@@ -423,7 +474,16 @@ export default function Page() {
                                                 column.toggleVisibility(!!value)
                                             }
                                         >
-                                            {column.id}
+                                            {(() => {
+                                                switch (column.id) {
+                                                    case "createdAt":
+                                                        return "Date of Creation";
+                                                    case "updatedAt":
+                                                        return "Last Updated";
+                                                    default:
+                                                        return column.id;
+                                                }
+                                            })()}
                                         </DropdownMenuCheckboxItem>
                                     )
                                 })}
@@ -579,7 +639,36 @@ export default function Page() {
                         {table.getFilteredSelectedRowModel().rows.length} of{" "}
                         {table.getFilteredRowModel().rows.length} row(s) selected.
                     </div> */}
-                    <div className="space-x-2">
+                    <div className="w-fit items-center gap-2 flex flex-row">
+                        <Label htmlFor="rows-per-page" className="text-sm max-md:text-xs font-medium">
+                            Rows per page
+                        </Label>
+                        <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={(value) => {
+                                table.setPageSize(Number(value))
+                            }}
+                        >
+                            <SelectTrigger className="w-20" id="rows-per-page">
+                                <SelectValue
+                                    placeholder={table.getState().pagination.pageSize}
+                                />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                                        {pageSize}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-fit items-center justify-center text-sm max-md:text-xs font-medium">
+                        Page {table.getState().pagination.pageIndex + 1} of{" "}
+                        {table.getPageCount()}
+                    </div>
+
+                    <div className="flex flex-row space-x-2 max-md:space-x-1">
                         <Button
                             variant="outline"
                             size="sm"
