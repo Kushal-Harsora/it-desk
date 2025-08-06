@@ -13,7 +13,34 @@ import { Input } from "@/components/ui/input"
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table"
 import { cn } from "@/lib/utils"
 
-import { ArrowUpDown, ChevronDown, Eye } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Eye } from "lucide-react"
+// Calendar import***
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Calendar } from "@/components/ui/calendar"
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+
+import axios from "axios"
+
+
 
 
 type Ticket = {
@@ -28,6 +55,15 @@ type Ticket = {
 export default function AdminDashboard() {
     const [tickets, setTickets] = useState<Ticket[]>([])
     const [loading, setLoading] = useState(true)
+
+    const form = useForm({
+        defaultValues: {
+            dateRange: {
+                from: new Date(),
+                to: new Date(),
+            },
+        },
+    });
 
     useEffect(() => {
         const fetchTickets = async () => {
@@ -151,6 +187,58 @@ export default function AdminDashboard() {
         getPaginationRowModel: getPaginationRowModel(),
     })
 
+    // Calendar code
+
+    const FormSchema = z.object({
+        dateRange: z.object({
+            from: z.date({
+                error: "Start date is required",
+            }),
+            to: z.date({
+                error: "End date is required",
+            }),
+        }),
+    })
+
+
+
+    // this goes in the same component as your <form> and the <Table>
+
+    const [filteredTickets, setFilteredTickets] = useState([]);
+
+useEffect(() => {
+    axios.get("/api/tickets")
+        .then((res) => {
+            console.log(res.data.tickets);
+            setFilteredTickets(res.data.tickets);
+        })
+        .catch((err) => {
+            console.error("Error fetching tickets:", err);
+        });
+}, []);
+
+    // useReactTable config
+    // update this in your `onSubmit`
+    const onSubmit = async (data: { dateRange: { from: Date; to: Date } }) => {
+        try {
+            const from = data.dateRange.from.toISOString();
+            const to = data.dateRange.to.toISOString();
+
+            const res = await axios.get(`/api/tickets?start=${from}&end=${to}`);
+            console.log("Response here: - " + res)
+            setFilteredTickets(res.data.tickets); // Access tickets array from response
+        } catch (error) {
+            console.error("Error fetching filtered tickets:", error);
+        }
+    };
+
+    function CalendarForm() {
+        const form = useForm<z.infer<typeof FormSchema>>({
+            resolver: zodResolver(FormSchema),
+        })
+
+    }
+
     if (loading) return <div className="p-6">Loading tickets...</div>
 
     return (
@@ -159,23 +247,6 @@ export default function AdminDashboard() {
                 <h1 className=" text-5xl max-lg:text-3xl font-bold">
                     Admin Dashboard 🎟️
                 </h1>
-
-
-
-                {/* <div className="flex gap-2 mb-4">
-                    <button onClick={() => handleFilter("weekly")} className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer">
-                        Weekly
-                    </button>
-                    <button onClick={() => handleFilter("monthly")} className="px-4 py-2 bg-green-500 text-white rounded cursor-pointer">
-                        Monthly
-                    </button>
-                    <button onClick={() => handleFilter("all")} className="px-4 py-2 bg-gray-500 text-white rounded cursor-pointer">
-                        All
-                    </button>
-                </div> */}
-
-
-
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
                         placeholder="Filter tickets..."
@@ -185,6 +256,65 @@ export default function AdminDashboard() {
                         }
                         className="max-w-sm"
                     />
+                    {/* Calendar FrontEnd */}
+
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            <FormField
+                                control={form.control}
+                                name="dateRange"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Date of birth</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className={cn(
+                                                            "w-[240px] pl-3 text-left font-normal",
+                                                            !field.value?.from && "text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {field.value?.from ? (
+                                                            field.value.to ? (
+                                                                <>
+                                                                    {format(field.value.from, "PPP")} – {format(field.value.to, "PPP")}
+                                                                </>
+                                                            ) : (
+                                                                format(field.value.from, "PPP")
+                                                            )
+                                                        ) : (
+                                                            <span>Pick a date range</span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="range"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) =>
+                                                        date > new Date() || date < new Date("1900-01-01")
+                                                    }
+                                                    captionLayout="dropdown"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit">Submit</Button>
+                        </form>
+                    </Form>
+
+                    {/* Calendar End */}
+
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -301,3 +431,4 @@ export default function AdminDashboard() {
         </main>
     )
 }
+
