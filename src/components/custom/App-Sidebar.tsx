@@ -49,6 +49,9 @@ export function AppSidebar() {
           },
           duration: 1500
         });
+
+        window.localStorage.removeItem("name");
+        window.localStorage.removeItem("email");
         router.push("/login");
       }
     } catch (error) {
