@@ -9,6 +9,7 @@ import { parseForm } from '@/utils/parseForm';
 // import { success } from 'zod';
 
 
+
 export const config = {
   api: {
     bodyParser: false,
@@ -80,50 +81,40 @@ export async function POST(req: NextRequest) {
 
 
 import { subDays } from 'date-fns'
+// route.ts
 export async function GET(req: NextRequest) {
-  const filter = req.nextUrl.searchParams.get('filter')
-  const now = new Date()
+  try {
+    const { searchParams } = new URL(req.url);
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+    console.log("Inside the get request!!!")
+    let where = {};
 
+    if (start && end) {
+      where = {
+        createdAt: {
+          gte: new Date(start),
+          lte: new Date(end),
+        },
+      };
+    }
 
-
-  let whereClause = {}
-
-if (filter === 'weekly') {
-  console.log("Weekly tickets !!!!!!!!!!!!!!")
-  whereClause = {
-    createdAt: {
-      gte: subDays(now, 7),
-      lte: now,
-    },
+    const tickets = await prisma.ticket.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    console.log(tickets)
+    return NextResponse.json({ tickets }, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-  console.log("After : -")
-} else if (filter === 'monthly') {
-  console.log("Monthly tickets !!!!!!!!!!!!!!")
-  whereClause = {
-    createdAt: {
-      gte: subDays(now, 30),
-      lte: now,
-    },
-  }
-
 }
-console.log("Now:", now.toISOString())
-console.log("Filter:", filter)
-console.log("Where Clause:", JSON.stringify(whereClause, null, 2))
 
-  const tickets = await prisma.ticket.findMany({
-    where: whereClause,
-    orderBy: {
-      createdAt: 'asc',
-    },
-    
-  })
-  console.log("All tickets !!!!!!!!!!!!!!")
-  // console.log(tickets.map(t => t.createdAt))
 
-  
-  return NextResponse.json(tickets)
-}
+
 
 
 
