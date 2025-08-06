@@ -264,7 +264,7 @@ const columns: ColumnDef<Ticket>[] = [
                                     </DialogTitle>
                                 </DialogHeader>
                                 <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
-                                    <div className=" w-full h-fit flex flex-row justify-evenly items-center">
+                                    <div className=" w-full h-fit flex flex-row max-md:flex-col justify-evenly items-center">
                                         <div className=" flex flex-row gap-1 justify-center items-center">
                                             <span className=" font-medium">Status: </span>
                                             <div className={cn(`text-left font-medium`, {
@@ -332,7 +332,7 @@ export default function Page() {
         },
     });
 
-    const [open, setOpen] = React.useState(false);
+    const [openTicket, setOpenTicket] = React.useState(false);
     const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
     const [loading, setLoading] = React.useState<boolean>(true);
     const [status, setStatus] = React.useState<StatusGrouped[]>([]);
@@ -425,7 +425,7 @@ export default function Page() {
                     },
                     duration: 1500
                 });
-                setOpen(false);
+                setOpenTicket(false);
                 window.location.reload();
             }
         } catch (error) {
@@ -462,11 +462,14 @@ export default function Page() {
                         }
                         className="max-w-sm"
                     />
-                
+
+                    <span className="max-md:hidden px-6 w-fit">
+                        Total Tickets - <span className="font-bold">{TicketData.length}</span>
+                    </span>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
+                            <Button variant="outline" className="ml-auto max-md:text-xs">
                                 Customize Columns <ChevronDown />
                             </Button>
                         </DropdownMenuTrigger>
@@ -499,9 +502,10 @@ export default function Page() {
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Dialog open={open} onOpenChange={setOpen}>
+
+                    <Dialog open={openTicket} onOpenChange={setOpenTicket}>
                         <DialogTrigger asChild>
-                            <Button variant={'default'}>Create Ticket</Button>
+                            <Button className=" max-md:text-xs" variant={'default'}>Create Ticket</Button>
                         </DialogTrigger>
                         <DialogContent className="max-sm:max-w-4/5 w-full">
                             <DialogHeader>

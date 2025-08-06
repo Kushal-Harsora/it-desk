@@ -16,6 +16,7 @@ import {
 import { Button } from "../ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import axios, { AxiosResponse } from "axios";
 
 // Menu items.
 const items = [
@@ -34,6 +35,34 @@ const items = [
 export function AppSidebar() {
 
   const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const response: AxiosResponse = await axios.get('api/auth/logout');
+      const data = response.data
+      if (data && response.status === 200) {
+        toast.success(data.message || "Logout successful", {
+          style: {
+            "backgroundColor": "#D5F5E3",
+            "color": "black",
+            "border": "none"
+          },
+          duration: 1500
+        });
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Error on Logout", error);
+      toast.error("Failed to logout", {
+        style: {
+          "backgroundColor": "#FADBD8",
+          "color": "black",
+          "border": "none"
+        },
+        duration: 2500
+      })
+    }
+  }
 
   return (
     <Sidebar>
@@ -57,10 +86,7 @@ export function AppSidebar() {
             <SidebarFooter className=" bg-red-300">
               <Button
                 variant={'destructive'}
-                onClick={() => {
-                  toast.success("Logout Success");
-                  router.push("/login");
-                }}
+                onClick={handleLogout}
               >
                 Logout
               </Button>
