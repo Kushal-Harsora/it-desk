@@ -1,6 +1,4 @@
-import { timeZone } from "@/const/constVal";
 import { prisma } from "@/db/prisma";
-import { toZonedTime } from "date-fns-tz";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -27,7 +25,7 @@ export async function POST(request: NextRequest) {
                 ticketId: ticketId,
                 message: comment,
                 authorId: admin.id,
-                createdAt: toZonedTime(new Date(), timeZone)
+                createdAt: new Date()
             }
         });
 

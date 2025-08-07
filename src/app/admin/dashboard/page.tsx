@@ -109,6 +109,11 @@ const CommentSchema = z.object({
         message: "Comment must be more than 1 character long"
     }),
     ticketId: z.number()
+});
+
+const StatusSchema = z.object({
+    status: z.string(),
+    ticketId: z.number()
 })
 
 const CalendarSchema = z.object({
@@ -143,7 +148,12 @@ export default function Page() {
         }
     });
 
-
+    const statusForm = useForm<z.infer<typeof StatusSchema>>({
+        resolver: zodResolver(StatusSchema),
+        defaultValues: {
+            status: ""
+        }
+    })
 
     const formCalendar = useForm({
         resolver: zodResolver(CalendarSchema),
@@ -334,7 +344,59 @@ export default function Page() {
                             <DropdownMenuSeparator />
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button variant="ghost">Add/Edit Comment</Button>
+                                    <Button className="w-full" variant="ghost">Toggle Status</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Toggle Status</DialogTitle>
+                                    </DialogHeader>
+                                    <Form {...statusForm}>
+                                        <form onSubmit={statusForm.handleSubmit(onSubmitStatus)} className="space-y-4">
+                                            <input
+                                                type="hidden"
+                                                value={row_data.id}
+                                                {...statusForm.register("ticketId", { valueAsNumber: true })}
+                                            />
+                                            <FormField
+                                                control={statusForm.control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Status</FormLabel>
+                                                        <FormControl>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <SelectTrigger className="w-full">
+                                                                    <SelectValue placeholder="Select ticket status" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectGroup>
+                                                                        <SelectLabel>Ticket Status</SelectLabel>
+                                                                        <SelectItem value="OPEN">Open</SelectItem>
+                                                                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                                                                        <SelectItem value="RESOLVED">Resolved</SelectItem>
+                                                                        <SelectItem value="CLOSED">Closed</SelectItem>
+                                                                    </SelectGroup>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <DialogFooter>
+                                                <Button type="submit">Save changes</Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </Form>
+                                    <DialogClose asChild>
+                                        <Button className="hidden" ref={dialogCloseButton}></Button>
+                                    </DialogClose>
+                                </DialogContent>
+                            </Dialog>
+                            <DropdownMenuSeparator />
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className="w-full" variant="ghost">Add/Edit Comment</Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-[425px]">
                                     <DialogHeader>
@@ -430,13 +492,13 @@ export default function Page() {
                                                     {comment_data.message}
                                                 </div>
                                             ))}
-                                        </div>) : 
-                                        (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                        </div>) :
+                                            (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
                                                 <span className=" font-medium">Commnets: </span>
                                                 <div className="text-center w-full h-fit overflow-auto text-wrap">
                                                     No Comment Found
                                                 </div>
-                                        </div>)}
+                                            </div>)}
                                     </div>
                                 </DialogContent>
                             </Dialog>
@@ -493,63 +555,6 @@ export default function Page() {
         getData();
     }, []);
 
-    // const handleSubmitComment = async (values: z.infer<typeof CommentSchema>) => {
-    //     console.log(values);
-    //     if (dialogCloseButton.current) {
-    //         dialogCloseButton.current.click();
-    //     }
-    //     // setOpenComment(false);
-    // }
-
-    // const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
-
-    //     const formData = new FormData();
-    //     formData.append("title", values.title)
-    //     formData.append("description", values.description);
-    //     formData.append("priority", values.priority.toLowerCase());
-    //     if (values.attachProof != undefined)
-    //         formData.append("attachProof", values.attachProof);
-    //     try {
-    //         const response: AxiosResponse = await axios.post('/api/tickets', formData, {
-    //             headers: {
-    //                 'Content-type': 'multipart/form-data'
-    //             }
-    //         });
-
-    //         const data = response.data;
-
-    //         if (response.status === 201) {
-    //             form.reset();
-    //             toast.success(data.message || "Ticket Created successfully", {
-    //                 style: {
-    //                     "backgroundColor": "#D5F5E3",
-    //                     "color": "black",
-    //                     "border": "none"
-    //                 },
-    //                 duration: 1500
-    //             });
-    //             setOpenTicket(false);
-    //             window.location.reload();
-    //         }
-    //     } catch (error) {
-    //         if (axios.isAxiosError(error) && error.response) {
-    //             const { status, data } = error.response;
-    //             if (status === 500) {
-    //                 toast.error(data.error || "Failed to create ticket", {
-    //                     style: {
-    //                         "backgroundColor": "#FADBD8",
-    //                         "color": "black",
-    //                         "border": "none"
-    //                     },
-    //                     duration: 2500
-    //                 })
-    //                 form.reset();
-    //             }
-    //         }
-    //     }
-
-    // }
-
     const onSubmitCalendar = async (data: { dateRange: { from: Date; to: Date } }) => {
         try {
             const from = toZonedTime(new Date(data.dateRange.from.toISOString()), timeZone);
@@ -563,6 +568,80 @@ export default function Page() {
         }
     }
 
+    const onSubmitStatus = async (values: z.infer<typeof StatusSchema>) => {
+        try {
+            const formData = {
+                email: window.localStorage.getItem("email"),
+                name: window.localStorage.getItem("name"),
+                ...values
+            }
+            const response: AxiosResponse = await axios.put('api/status', formData, {
+                headers: {
+                    'Content-Type': 'Application/json'
+                }
+            });
+            const data = response.data;
+            if (response.status === 201) {
+                commentForm.reset();
+                toast.success(data.message || "Status Updated Successfully", {
+                    style: {
+                        "backgroundColor": "#D5F5E3",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 1500
+                });
+                window.location.reload();
+            }
+
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 500) {
+                    toast.error(data.message || "Internal Server Error", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    commentForm.reset();
+                } else if (status === 404) {
+                    toast.error(data.message || "Admin not found. Kindly login again.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    commentForm.reset();
+                } else if (status === 401) {
+                    toast.error(data.message || "Some error in updating status", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    commentForm.reset();
+                }
+            } else {
+                toast.error("Some Unknown error occured. Try Again later.", {
+                    style: {
+                        "backgroundColor": "#FADBD8",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 2500
+                });
+                commentForm.reset();
+            }
+        }
+    }
+
     const onSubmitComment = async (values: z.infer<typeof CommentSchema>) => {
         try {
             const formData = {
@@ -570,7 +649,6 @@ export default function Page() {
                 name: window.localStorage.getItem("name"),
                 ...values
             }
-            console.log(formData);
             const response: AxiosResponse = await axios.post('api/comment', formData, {
                 headers: {
                     'Content-Type': 'Application/json'
