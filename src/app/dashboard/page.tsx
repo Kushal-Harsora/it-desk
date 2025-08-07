@@ -81,7 +81,7 @@ import { ChartArea } from "@/components/custom/Chart-Area"
 // import { Checkbox } from "@/components/ui/checkbox"
 
 // Icon, Style and consts imports
-import { ArrowUpDown, CalendarIcon, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, CalendarIcon, MoreHorizontal, SlidersHorizontal } from "lucide-react"
 import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
 // Ticket Type Definition
@@ -609,11 +609,11 @@ export default function Page() {
                         </span>
                     </div>
 
-                    <div className=" w-fit h-fit flex flex-row justify-evenly items-center gap-1">
+                    <div className=" w-fit h-fit flex flex-row justify-evenly items-center gap-3">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="ml-auto max-md:text-xs">
-                                    Customize Columns <ChevronDown />
+                                    <SlidersHorizontal /> View
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
