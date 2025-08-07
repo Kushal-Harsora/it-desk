@@ -397,7 +397,7 @@ export default function Page() {
                     setTicketData(response_ticket.data.tickets);
                 }
 
-                const response_chart: AxiosResponse = await axios.get('api/chart');
+                const response_chart: AxiosResponse = await axios.get(`api/chart?name=${name}&email=${email}`);
                 if (response_chart.status === 200) {
                     setStatus(response_chart.data.status);
                     setPriority(response_chart.data.priority);
