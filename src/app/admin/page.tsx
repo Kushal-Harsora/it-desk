@@ -51,12 +51,13 @@ const Page = () => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
 
         try {
-            const response: AxiosResponse = await axios.post('/api/auth/login', values, {
+            const response: AxiosResponse = await axios.post('admin/api/auth/login', values, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
             const data = response.data;
+            console.log(data);
             if (response.status === 200) {
                 window.localStorage.setItem("name", data.name);
                 window.localStorage.setItem("email", data.email);

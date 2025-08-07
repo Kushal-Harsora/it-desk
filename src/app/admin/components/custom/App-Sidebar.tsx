@@ -18,17 +18,18 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import axios, { AxiosResponse } from "axios";
 import React from "react";
+import Link from "next/link";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/admin/dashboard",
     icon: Home,
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/admin/dashboard/settings",
     icon: Settings,
   },
 ]
@@ -79,10 +80,10 @@ export const AppSidebar = () => {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
