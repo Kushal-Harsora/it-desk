@@ -305,13 +305,13 @@ const columns: ColumnDef<Ticket>[] = [
                                                 {comment_data.message}
                                             </div>
                                         ))}
-                                    </div>) : 
-                                    (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                    </div>) :
+                                        (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
                                             <span className=" font-medium">Commnets: </span>
                                             <div className="text-center w-full h-fit overflow-auto text-wrap">
                                                 No Comment Found
                                             </div>
-                                    </div>)}
+                                        </div>)}
                                 </div>
                             </DialogContent>
                         </Dialog>
@@ -387,20 +387,58 @@ export default function Page() {
     // Get the Ticket Data
     React.useEffect(() => {
         const getData = async () => {
-            const response_ticket: AxiosResponse = await axios.get('api/tickets');
-            if (response_ticket.status === 200) {
-                setTicketData(response_ticket.data.tickets);
-                console.log(response_ticket.data.tickets);
-            }
 
-            const response_chart: AxiosResponse = await axios.get('api/chart');
-            if (response_chart.status === 200) {
-                setStatus(response_chart.data.status);
-                setPriority(response_chart.data.priority);
-            }
+            try {
+                const name: string = window.localStorage.getItem("name") as string;
+                const email: string = window.localStorage.getItem("email") as string;
 
-            if (response_chart.status === 200 && response_ticket.status === 200) {
-                setLoading(false);
+                const response_ticket: AxiosResponse = await axios.get(`api/tickets?name=${name}&email=${email}&start=${toZonedTime(new Date('1900-01-01T00:00:00Z'), timeZone)}&end=${toZonedTime(new Date(), timeZone)}`);
+                if (response_ticket.status === 200) {
+                    setTicketData(response_ticket.data.tickets);
+                }
+
+                const response_chart: AxiosResponse = await axios.get('api/chart');
+                if (response_chart.status === 200) {
+                    setStatus(response_chart.data.status);
+                    setPriority(response_chart.data.priority);
+                }
+
+                if (response_chart.status === 200 && response_ticket.status === 200) {
+                    setLoading(false);
+                }
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                    const { status, data } = error.response;
+                    if (status === 401) {
+                        toast.error(data.error || "Necessary Field entires not found.", {
+                            style: {
+                                "backgroundColor": "#FADBD8",
+                                "color": "black",
+                                "border": "none"
+                            },
+                            duration: 2500
+                        })
+                    } else if (status === 404) {
+                        toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                            style: {
+                                "backgroundColor": "#FADBD8",
+                                "color": "black",
+                                "border": "none"
+                            },
+                            duration: 2500
+                        })
+                    } else if (status === 500) {
+                        toast.error(data.error || "Internal Server Error.", {
+                            style: {
+                                "backgroundColor": "#FADBD8",
+                                "color": "black",
+                                "border": "none"
+                            },
+                            duration: 2500
+                        });
+                        console.error(data.errorMessage);
+                    }
+                }
             }
         }
 
@@ -410,9 +448,15 @@ export default function Page() {
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
         const formData = new FormData();
-        formData.append("title", values.title)
+
+        const name: string = window.localStorage.getItem("name") as string;
+        const email: string = window.localStorage.getItem("email") as string;
+        formData.append("title", values.title);
         formData.append("description", values.description);
         formData.append("priority", values.priority.toLowerCase());
+        formData.append("name", name);
+        formData.append("email", email);
+
         if (values.attachProof != undefined)
             formData.append("attachProof", values.attachProof);
         try {
@@ -450,6 +494,16 @@ export default function Page() {
                         duration: 2500
                     })
                     form.reset();
+                } else if (status === 404) {
+                    toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    form.reset();
                 }
             }
         }
@@ -458,14 +512,49 @@ export default function Page() {
 
     const onSubmitCalendar = async (data: { dateRange: { from: Date; to: Date } }) => {
         try {
+
+            const name: string = window.localStorage.getItem("name") as string;
+            const email: string = window.localStorage.getItem("email") as string;
+
             const from = toZonedTime(new Date(data.dateRange.from.toISOString()), timeZone);
             const to = toZonedTime(new Date(data.dateRange.to.toISOString()), timeZone);
 
-            const res = await axios.get(`/api/tickets?start=${from}&end=${to}`);
+            const res = await axios.get(`/api/tickets?name=${name}&email=${email}&start=${from}&end=${to}`);
             setTicketData(res.data.tickets);
             setOpenCalendar(false);
         } catch (error) {
-            console.error("Error fetching filtered tickets:", error);
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 401) {
+                    toast.error(data.error || "Necessary Field entires not found.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                } else if (status === 404) {
+                    toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                } else if (status === 500) {
+                    toast.error(data.error || "Internal Server Error.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    });
+                    console.error(data.errorMessage);
+                }
+            }
         }
     }
 
@@ -539,6 +628,9 @@ export default function Page() {
                                     <DialogTitle className=" text-center">
                                         Filter Out the Dates of Tickets
                                     </DialogTitle>
+                                    <DialogDescription>
+                                        Select the start and end date for the tickets. The tickets in this range would be displayed. Click save when you&apos;re done.
+                                    </DialogDescription>
                                 </DialogHeader>
                                 <Form {...formCalendar}>
                                     <form onSubmit={formCalendar.handleSubmit(onSubmitCalendar)} className="space-y-8">

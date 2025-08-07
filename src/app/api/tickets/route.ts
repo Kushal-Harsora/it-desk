@@ -33,15 +33,25 @@ export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseForm(req);
 
-    console.log("Fields:", fields);
-
-
     const title = fields.title?.[0] || '';
     const description = fields.description?.[0] || '';
     const priority = fields.priority?.[0] || '';
+    const name = fields.name?.[0];
+    const email = fields.email?.[0];
 
-    if (!description || !priority || !title) {
+    if (!description || !priority || !title || !name || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const technician = await prisma.technician.findUnique({
+      where: {
+        email: email,
+        name: name
+      }
+    });
+
+    if(!technician) {
+      return NextResponse.json({ error: "Technician not found. Kindly Login Again." }, { status: 404 });
     }
 
     let fileName = '';
@@ -77,7 +87,8 @@ export async function POST(req: NextRequest) {
         title,
         attachment: fileName,
         createdAt: toZonedTime(new Date(), timeZone),
-        updatedAt: toZonedTime(new Date(), timeZone)
+        updatedAt: toZonedTime(new Date(), timeZone),
+        technicianId: technician.id
       },
     });
 
@@ -109,8 +120,27 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+
+    const name = searchParams.get('name');
+    const email = searchParams.get('email');
+
+    if (!name || !email) {
+      return NextResponse.json({ error: "Necessary Field entires not found." }, { status: 401 });
+    }
+
     const start = searchParams.get('start');
     const end = searchParams.get('end');
+
+    const technician = await prisma.technician.findUnique({
+      where: {
+        name: name,
+        email: email
+      }
+    });
+
+    if (!technician) {
+      return NextResponse.json({ error: "Technician not found. Kindly Login Again." }, { status: 404 });
+    }
 
     let where = {};
 
@@ -122,6 +152,7 @@ export async function GET(req: NextRequest) {
       endDate.setHours(23, 59, 59, 999);
 
       where = {
+        technicianId: technician.id,
         createdAt: {
           gte: toZonedTime(startDate, timeZone),
           lte: toZonedTime(endDate, timeZone),
@@ -142,11 +173,11 @@ export async function GET(req: NextRequest) {
         }
       }
     });
-    
+
     return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error.", errorMessage: error instanceof Error ? error.message : error }, { status: 500 });
   }
 }
 
