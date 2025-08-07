@@ -3,10 +3,6 @@ import formidable, { Fields, Files } from 'formidable';
 import { Readable } from 'stream';
 import { IncomingMessage } from 'http';
 
-// Disable Next.js body parser (important for file uploads)
-// utils/parseForm.ts
-
-
 export async function parseForm(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
   const form = formidable({
     multiples: false,
@@ -18,19 +14,24 @@ export async function parseForm(req: NextRequest): Promise<{ fields: Fields; fil
   if (!reader) throw new Error('Request body is empty or unreadable');
 
   const chunks: Uint8Array[] = [];
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    if (value) chunks.push(value);
+    if (value) chunks.push(value); // value might be undefined
+  }
+
+  if (chunks.length === 0) {
+    throw new Error("No data received in request body");
   }
 
   const buffer = Buffer.concat(chunks);
 
-  // Create a fake IncomingMessage object
+  // Simulate a real Node.js request stream
   const fakeReq = Object.assign(Readable.from(buffer), {
     headers: Object.fromEntries(req.headers.entries()),
     method: req.method,
-    url: req.url,
+    url: req.url || '',
   });
 
   return new Promise((resolve, reject) => {
@@ -40,4 +41,3 @@ export async function parseForm(req: NextRequest): Promise<{ fields: Fields; fil
     });
   });
 }
-
