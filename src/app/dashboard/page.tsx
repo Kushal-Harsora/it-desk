@@ -78,13 +78,15 @@ import { ChartArea } from "@/components/custom/Chart-Area"
 
 // Ticket Type Definition
 export type Ticket = {
+    id: string
     title: string
     priority: string,
     status: Status,
     ticket: string,
     description: string,
     createdAt: Date,
-    attachment: string
+    attachment: string,
+    attachmentUrl: string
 }
 
 // Create Ticket Form Schema
@@ -95,7 +97,7 @@ const TicketSchema = z.object({
     description: z.string().min(1, {
         message: "Problem description is required"
     }),
-    attachProof: z.instanceof(File).optional(),
+    attachment: z.instanceof(File).optional(),
     priority: z.string()
 });
 
@@ -230,15 +232,20 @@ const columns: ColumnDef<Ticket>[] = [
                                             {row_data.description}
                                         </div>
                                     </div>
-                                    {(row_data.attachment != '') && <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Attachment: </span>
-                                        {/* <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.attachment}
-                                        </div> */}
-                                        <Button variant={'default'}>
-                                            View Attachment
-                                        </Button>
-                                    </div>}
+                                    {row_data?.attachment && row_data?.id && (
+                                        <div className="flex flex-col justify-center items-center gap-2">
+                                            <span className="font-medium">Attachment:</span>
+                                            <a
+                                                href={`/api/tickets/${row_data.id}/attachment`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <Button>View Attachment</Button>
+                                            </a>
+
+                                        </div>
+                                    )}
+
 
                                     <div className=" flex flex-col justify-center items-center gap-2">
                                         <span className=" font-medium">Comments: </span>
@@ -255,6 +262,24 @@ const columns: ColumnDef<Ticket>[] = [
         },
     },
 ]
+import { useEffect, useState } from 'react';
+
+
+const handleView = async (ticketId: string) => {
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    try {
+        const response = await fetch(`/api/tickets/${ticketId}/attachment`);
+
+        // This handles the redirect manually
+        if (response.redirected) {
+            setImageUrl(response.url);
+        } else {
+            console.error('Failed to get image URL');
+        }
+    } catch (error) {
+        console.error('Error fetching attachment:', error);
+    }
+};
 
 
 export default function Page() {
@@ -265,7 +290,7 @@ export default function Page() {
         defaultValues: {
             title: "",
             description: "",
-            attachProof: undefined,
+            attachment: undefined,
         },
     });
 
@@ -282,6 +307,9 @@ export default function Page() {
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+
+
+
 
     const table = useReactTable({
         data: TicketData,
@@ -321,11 +349,13 @@ export default function Page() {
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
         const formData = new FormData();
+
+
         formData.append("title", values.title)
         formData.append("description", values.description);
         formData.append("priority", values.priority.toLowerCase());
-        if (values.attachProof != undefined)
-            formData.append("attachProof", values.attachProof);
+        if (values.attachment != undefined)
+            formData.append("attachment", values.attachment);
         try {
             const response: AxiosResponse = await axios.post('/api/tickets', formData, {
                 headers: {
@@ -380,7 +410,7 @@ export default function Page() {
                         }
                         className="max-w-sm"
                     />
-                
+
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -449,14 +479,15 @@ export default function Page() {
                                     />
                                     <FormField
                                         control={form.control}
-                                        name="attachProof"
+                                        name="attachment"
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Attach PDF/Image</FormLabel>
                                                 <FormControl>
                                                     <Input
-                                                        accept=".pdf, image/*"
                                                         type="file"
+                                                        accept=".png,.jpg,.jpeg,.pdf"
+
                                                         onChange={e => {
                                                             const file = e.target.files?.[0];
                                                             field.onChange(file);
