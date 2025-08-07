@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         ContentType: file.mimetype ?? 'application/octet-stream',
       }));
 
-      fileName = s3Key; // So you can save it in DB if needed
+      fileName = s3Key; 
       console.log("Upload complete");
     }
 
