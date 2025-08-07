@@ -1,4 +1,4 @@
-import { Priority, Status } from "@prisma/client";
+import { Comment, Priority, Status } from "@prisma/client";
 
 export const timeZone = 'Asia/Kolkata';
 
@@ -11,6 +11,7 @@ export type Ticket = {
     createdAt: Date,
     updatedAt: Date,
     attachment: string
+    comments: Comment['message']
 }
 
 export type StatusCount = {

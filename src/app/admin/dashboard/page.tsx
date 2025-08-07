@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 // System imports
@@ -25,6 +26,7 @@ import axios, { AxiosResponse } from "axios"
 // Component imports
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -87,6 +89,7 @@ import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
 // Ticket Type Definition
 import { Ticket } from "@/const/constVal"
+import { Priority, Status } from "@prisma/client"
 
 // Create Ticket Form Schema
 const TicketSchema = z.object({
@@ -97,8 +100,15 @@ const TicketSchema = z.object({
         message: "Problem description is required"
     }),
     attachProof: z.instanceof(File).optional(),
-    priority: z.string()
+    priority: z.string(),
+    status: z.string()
 });
+
+const CommentSchema = z.object({
+    comment: z.string().min(1, {
+        message: "Comment must be more than 1 character long"
+    })
+})
 
 const CalendarSchema = z.object({
     dateRange: z.object({
@@ -111,243 +121,28 @@ const CalendarSchema = z.object({
     }),
 })
 
-const columns: ColumnDef<Ticket>[] = [
-    // {
-    //     id: "select",
-    //     header: ({ table }) => (
-    //         <Checkbox
-    //             checked={
-    //                 table.getIsAllPageRowsSelected() ||
-    //                 (table.getIsSomePageRowsSelected() && "indeterminate")
-    //             }
-    //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-    //             aria-label="Select all"
-    //         />
-    //     ),
-    //     cell: ({ row }) => (
-    //         <Checkbox
-    //             checked={row.getIsSelected()}
-    //             onCheckedChange={(value) => row.toggleSelected(!!value)}
-    //             aria-label="Select row"
-    //         />
-    //     ),
-    //     enableSorting: false,
-    //     enableHiding: false,
-    // },
-    {
-        accessorKey: "status",
-        header: () => <div className="text-start">Status</div>,
-        cell: ({ row }) => {
-            const status: string = row.getValue("status");
-            return <div className={cn(`text-left font-semibold`, {
-                'text-red-500': status === 'OPEN',
-                'text-yellow-500': status === 'IN_PRORESS',
-                'text-green-500': status === 'RESOLVED',
-                'text-blue-500': status === 'CLOSED',
-            })}>{status}</div>
-        },
-    },
-    {
-        accessorKey: "title",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-left"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Ticket
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("title")}</div>,
-    },
-    {
-        accessorKey: "description",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-start"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Problem
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("description")}</div>,
-    },
-    {
-        accessorKey: "priority",
-        header: () => <div className="text-left">Priority</div>,
-        cell: ({ row }) => {
-            const priority: string = row.getValue("priority");
-            return <div className={cn(`text-left font-medium`, {
-                'text-red-500': priority === 'HIGH',
-                'text-yellow-500': priority === 'MEDIUM',
-                'text-green-500': priority === 'LOW',
-            })}>{priority}</div>
-        },
-    },
-    {
-        accessorKey: "createdAt",
-        header: ({ column }) => {
-            return (
-                <div className="w-fit">
-                    <Button
-                        className="w-fit text-center"
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Date of Creation
-                        <ArrowUpDown />
-                    </Button>
-                </div>
-            )
-        },
-        cell: ({ row }) => {
-            const createdAt: Date = row.getValue("createdAt");
-            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
-            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
-            return <div className='font-medium text-center'>{formattedDate}</div>
-        },
-    },
-    {
-        accessorKey: "updatedAt",
-        header: ({ column }) => {
-            return (
-                <div className="w-fit">
-                    <Button
-                        className="w-fit text-center"
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Last Updated
-                        <ArrowUpDown />
-                    </Button>
-                </div>
-            )
-        },
-        cell: ({ row }) => {
-            const createdAt: Date = row.getValue("updatedAt");
-            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
-            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
-            return <div className='font-medium text-center'>{formattedDate}</div>
-        },
-    },
-    {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-            const title = row.original.title
-            const row_data = row.original;
-            const createdAt = new Date(row_data.createdAt);
-
-            const formattedDate = new Intl.DateTimeFormat('en-IN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                timeZone: 'Asia/Kolkata',
-            }).format(createdAt);
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant={'ghost'} className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(title)}
-                        >
-                            Copy Ticket Name
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button className=" w-full" variant={'ghost'}>
-                                    View Details
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle className=" text-center">
-                                        Ticket Details for <span className=" font-bold text-blue-500">{row_data.title}</span>
-                                    </DialogTitle>
-                                </DialogHeader>
-                                <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
-                                    <div className=" w-full h-fit flex flex-row max-md:flex-col justify-evenly items-center">
-                                        <div className=" flex flex-row gap-1 justify-center items-center">
-                                            <span className=" font-medium">Status: </span>
-                                            <div className={cn(`text-left font-medium`, {
-                                                'text-red-500': row_data.status === 'OPEN',
-                                                'text-yellow-500': row_data.status === 'IN_PROGRESS',
-                                                'text-green-500': row_data.status === 'RESOLVED',
-                                                'text-blue-500': row_data.status === 'CLOSED',
-                                            })}>{row_data.status}</div>
-                                        </div>
-                                        <div className=" flex flex-row gap-1 justify-center items-center">
-                                            <span className=" font-medium">Priority: </span>
-                                            <div className={cn(`text-left font-medium`, {
-                                                'text-red-500': row_data.priority === 'HIGH',
-                                                'text-yellow-500': row_data.priority === 'MEDIUM',
-                                                'text-green-500': row_data.priority === 'LOW',
-                                            })}>{row_data.priority}</div>
-                                        </div>
-                                        <div className=" flex flex-row gap-1 justify-center items-center">
-                                            <span className=" font-medium">Date: </span>
-                                            <div className="text-left font-medium">{formattedDate}</div>
-                                        </div>
-                                    </div>
-                                    <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Description: </span>
-                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.description}
-                                        </div>
-                                    </div>
-                                    {(row_data.attachment != '') && <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Attachment: </span>
-                                        {/* <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.attachment}
-                                        </div> */}
-                                        <Button variant={'default'}>
-                                            View Attachment
-                                        </Button>
-                                    </div>}
-
-                                    <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Comments: </span>
-                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.description}
-                                        </div>
-                                    </div>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )
-        },
-    },
-]
-
 
 export default function Page() {
 
     // Form Handling
-    const form = useForm<z.infer<typeof TicketSchema>>({
-        resolver: zodResolver(TicketSchema),
+    // const form = useForm<z.infer<typeof TicketSchema>>({
+    //     resolver: zodResolver(TicketSchema),
+    //     defaultValues: {
+    //         title: "",
+    //         description: "",
+    //         priority: Priority.LOW,
+    //         status: Status.OPEN
+    //     }
+    // });
+
+    const commentForm = useForm<z.infer<typeof CommentSchema>>({
+        resolver: zodResolver(CommentSchema),
         defaultValues: {
-            title: "",
-            description: "",
-            attachProof: undefined,
-        },
+            comment: ''
+        }
     });
+
+
 
     const formCalendar = useForm({
         resolver: zodResolver(CalendarSchema),
@@ -359,7 +154,9 @@ export default function Page() {
         },
     });
 
-    const [openTicket, setOpenTicket] = React.useState(false);
+    const dialogCloseButton = React.useRef<HTMLButtonElement | null>(null);
+
+    const [openComment, setOpenComment] = React.useState(false);
     const [openCalendar, setOpenCalendar] = React.useState(false);
     const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
     const [loading, setLoading] = React.useState<boolean>(true);
@@ -376,6 +173,264 @@ export default function Page() {
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+
+    const columns: ColumnDef<Ticket>[] = [
+        // {
+        //     id: "select",
+        //     header: ({ table }) => (
+        //         <Checkbox
+        //             checked={
+        //                 table.getIsAllPageRowsSelected() ||
+        //                 (table.getIsSomePageRowsSelected() && "indeterminate")
+        //             }
+        //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        //             aria-label="Select all"
+        //         />
+        //     ),
+        //     cell: ({ row }) => (
+        //         <Checkbox
+        //             checked={row.getIsSelected()}
+        //             onCheckedChange={(value) => row.toggleSelected(!!value)}
+        //             aria-label="Select row"
+        //         />
+        //     ),
+        //     enableSorting: false,
+        //     enableHiding: false,
+        // },
+        {
+            accessorKey: "status",
+            header: () => <div className="text-start">Status</div>,
+            cell: ({ row }) => {
+                const status: string = row.getValue("status");
+                return <div className={cn(`text-left font-semibold`, {
+                    'text-red-500': status === 'OPEN',
+                    'text-yellow-500': status === 'IN_PRORESS',
+                    'text-green-500': status === 'RESOLVED',
+                    'text-blue-500': status === 'CLOSED',
+                })}>{status}</div>
+            },
+        },
+        {
+            accessorKey: "title",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-left"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Ticket
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => <div>{row.getValue("title")}</div>,
+        },
+        {
+            accessorKey: "description",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-start"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Problem
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => <div>{row.getValue("description")}</div>,
+        },
+        {
+            accessorKey: "priority",
+            header: () => <div className="text-left">Priority</div>,
+            cell: ({ row }) => {
+                const priority: string = row.getValue("priority");
+                return <div className={cn(`text-left font-medium`, {
+                    'text-red-500': priority === 'HIGH',
+                    'text-yellow-500': priority === 'MEDIUM',
+                    'text-green-500': priority === 'LOW',
+                })}>{priority}</div>
+            },
+        },
+        {
+            accessorKey: "createdAt",
+            header: ({ column }) => {
+                return (
+                    <div className="w-fit">
+                        <Button
+                            className="w-fit text-center"
+                            variant="ghost"
+                            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        >
+                            Date of Creation
+                            <ArrowUpDown />
+                        </Button>
+                    </div>
+                )
+            },
+            cell: ({ row }) => {
+                const createdAt: Date = row.getValue("createdAt");
+                const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+                const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+                return <div className='font-medium text-center'>{formattedDate}</div>
+            },
+        },
+        {
+            accessorKey: "updatedAt",
+            header: ({ column }) => {
+                return (
+                    <div className="w-fit">
+                        <Button
+                            className="w-fit text-center"
+                            variant="ghost"
+                            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        >
+                            Last Updated
+                            <ArrowUpDown />
+                        </Button>
+                    </div>
+                )
+            },
+            cell: ({ row }) => {
+                const createdAt: Date = row.getValue("updatedAt");
+                const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+                const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+                return <div className='font-medium text-center'>{formattedDate}</div>
+            },
+        },
+        {
+            id: "actions",
+            enableHiding: false,
+            cell: ({ row }) => {
+                const title = row.original.title
+                const row_data = row.original;
+                const createdAt = new Date(row_data.createdAt);
+
+                const formattedDate = new Intl.DateTimeFormat('en-IN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    timeZone: 'Asia/Kolkata',
+                }).format(createdAt);
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant={'ghost'} className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => navigator.clipboard.writeText(title)}
+                            >
+                                Copy Ticket Name
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost">Add/Edit Comment</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Add/Edit Comment</DialogTitle>
+                                    </DialogHeader>
+                                    <Form {...commentForm}>
+                                        <form onSubmit={commentForm.handleSubmit(handleSubmitComment)} className="space-y-4">
+                                            <FormField
+                                                control={commentForm.control}
+                                                name="comment"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Ticket Comment</FormLabel>
+                                                        <FormControl>
+                                                            <Textarea className="w-full min-h-[100px] max-h-[400px] overflow-auto" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <DialogFooter>
+                                                <Button type="submit">Save changes</Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </Form>
+                                    <DialogClose asChild>
+                                        <Button className="hidden" ref={dialogCloseButton}></Button>
+                                    </DialogClose>
+                                </DialogContent>
+                            </Dialog>
+                            <DropdownMenuSeparator />
+                            <Dialog >
+                                <DialogTrigger asChild>
+                                    <Button className=" w-full" variant={'ghost'}>
+                                        View Details
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle className=" text-center">
+                                            Ticket Details for <span className=" font-bold text-blue-500">{row_data.title}</span>
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
+                                        <div className=" w-full h-fit flex flex-row max-md:flex-col justify-evenly items-center">
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Status: </span>
+                                                <div className={cn(`text-left font-medium`, {
+                                                    'text-red-500': row_data.status === 'OPEN',
+                                                    'text-yellow-500': row_data.status === 'IN_PROGRESS',
+                                                    'text-green-500': row_data.status === 'RESOLVED',
+                                                    'text-blue-500': row_data.status === 'CLOSED',
+                                                })}>{row_data.status}</div>
+                                            </div>
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Priority: </span>
+                                                <div className={cn(`text-left font-medium`, {
+                                                    'text-red-500': row_data.priority === 'HIGH',
+                                                    'text-yellow-500': row_data.priority === 'MEDIUM',
+                                                    'text-green-500': row_data.priority === 'LOW',
+                                                })}>{row_data.priority}</div>
+                                            </div>
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Date: </span>
+                                                <div className="text-left font-medium">{formattedDate}</div>
+                                            </div>
+                                        </div>
+                                        <div className=" flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Description: </span>
+                                            <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                                {row_data.description}
+                                            </div>
+                                        </div>
+                                        {(row_data.attachment != '') && <div className=" flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Attachment: </span>
+                                            {/* <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                                                {row_data.attachment}
+                                                            </div> */}
+                                            <Button variant={'default'}>
+                                                View Attachment
+                                            </Button>
+                                        </div>}
+
+                                        <div className="w-full flex flex-row justify-evenly items-center">
+                                            <Button variant={'outline'}>
+                                                Update Status
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )
+            },
+        },
+    ];
 
     const table = useReactTable({
         data: TicketData,
@@ -421,54 +476,62 @@ export default function Page() {
         getData();
     }, []);
 
-    const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
-
-        const formData = new FormData();
-        formData.append("title", values.title)
-        formData.append("description", values.description);
-        formData.append("priority", values.priority.toLowerCase());
-        if (values.attachProof != undefined)
-            formData.append("attachProof", values.attachProof);
-        try {
-            const response: AxiosResponse = await axios.post('/api/tickets', formData, {
-                headers: {
-                    'Content-type': 'multipart/form-data'
-                }
-            });
-
-            const data = response.data;
-
-            if (response.status === 201) {
-                form.reset();
-                toast.success(data.message || "Ticket Created successfully", {
-                    style: {
-                        "backgroundColor": "#D5F5E3",
-                        "color": "black",
-                        "border": "none"
-                    },
-                    duration: 1500
-                });
-                setOpenTicket(false);
-                window.location.reload();
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                const { status, data } = error.response;
-                if (status === 500) {
-                    toast.error(data.error || "Failed to create ticket", {
-                        style: {
-                            "backgroundColor": "#FADBD8",
-                            "color": "black",
-                            "border": "none"
-                        },
-                        duration: 2500
-                    })
-                    form.reset();
-                }
-            }
+    const handleSubmitComment = async (values: z.infer<typeof CommentSchema>) => {
+        console.log(values);
+        if (dialogCloseButton.current) {
+            dialogCloseButton.current.click();
         }
-
+        // setOpenComment(false);
     }
+
+    // const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
+
+    //     const formData = new FormData();
+    //     formData.append("title", values.title)
+    //     formData.append("description", values.description);
+    //     formData.append("priority", values.priority.toLowerCase());
+    //     if (values.attachProof != undefined)
+    //         formData.append("attachProof", values.attachProof);
+    //     try {
+    //         const response: AxiosResponse = await axios.post('/api/tickets', formData, {
+    //             headers: {
+    //                 'Content-type': 'multipart/form-data'
+    //             }
+    //         });
+
+    //         const data = response.data;
+
+    //         if (response.status === 201) {
+    //             form.reset();
+    //             toast.success(data.message || "Ticket Created successfully", {
+    //                 style: {
+    //                     "backgroundColor": "#D5F5E3",
+    //                     "color": "black",
+    //                     "border": "none"
+    //                 },
+    //                 duration: 1500
+    //             });
+    //             setOpenTicket(false);
+    //             window.location.reload();
+    //         }
+    //     } catch (error) {
+    //         if (axios.isAxiosError(error) && error.response) {
+    //             const { status, data } = error.response;
+    //             if (status === 500) {
+    //                 toast.error(data.error || "Failed to create ticket", {
+    //                     style: {
+    //                         "backgroundColor": "#FADBD8",
+    //                         "color": "black",
+    //                         "border": "none"
+    //                     },
+    //                     duration: 2500
+    //                 })
+    //                 form.reset();
+    //             }
+    //         }
+    //     }
+
+    // }
 
     const onSubmitCalendar = async (data: { dateRange: { from: Date; to: Date } }) => {
         try {
@@ -613,7 +676,7 @@ export default function Page() {
                             </DialogContent>
                         </Dialog>
 
-                        <Dialog open={openTicket} onOpenChange={setOpenTicket}>
+                        {/* <Dialog open={openTicket} onOpenChange={setOpenTicket}>
                             <DialogTrigger className="mr-auto cursor-pointer w-fit" asChild>
                                 <Button className=" max-md:text-xs" variant={'default'}>Create Ticket</Button>
                             </DialogTrigger>
@@ -706,7 +769,7 @@ export default function Page() {
                                     </form>
                                 </Form>
                             </DialogContent>
-                        </Dialog>
+                        </Dialog> */}
                     </div>
                 </div>
                 <div className=" w-full rounded-md border">
