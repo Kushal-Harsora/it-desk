@@ -84,9 +84,9 @@ import { ChartArea } from "@/components/custom/Chart-Area"
 import { ArrowUpDown, CalendarIcon, ChevronDown, MoreHorizontal } from "lucide-react"
 import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
-
 // Ticket Type Definition
 import { Ticket } from "@/const/constVal"
+
 
 // Create Ticket Form Schema
 const TicketSchema = z.object({
@@ -114,19 +114,6 @@ const CalendarSchema = z.object({
 const columns: ColumnDef<Ticket>[] = [
     {
         accessorKey: "status",
-        header: () => <div className="text-start">Status</div>,
-        cell: ({ row }) => {
-            const status: string = row.getValue("status");
-            return <div className={cn(`text-left font-semibold`, {
-                'text-red-500': status === 'OPEN',
-                'text-yellow-500': status === 'IN_PRORESS',
-                'text-green-500': status === 'RESOLVED',
-                'text-blue-500': status === 'CLOSED',
-            })}>{status}</div>
-        },
-    },
-    {
-        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button
@@ -134,32 +121,62 @@ const columns: ColumnDef<Ticket>[] = [
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Ticket
+                    Status
                     <ArrowUpDown />
                 </Button>
             )
         },
+        cell: ({ row }) => {
+            const status: string = row.getValue("status");
+            return (
+                <div className={cn(`text-left font-semibold`, {
+                    'text-red-500': status === 'OPEN',
+                    'text-yellow-500': status === 'IN_PROGRESS',
+                    'text-green-500': status === 'RESOLVED',
+                    'text-blue-500': status === 'CLOSED',
+                })}>
+                    {status}
+                </div>
+            )
+        },
+        sortingFn: (rowA, rowB, columnId) => {
+            const statusOrder = {
+                'OPEN': 1,
+                'IN_PROGRESS': 2,
+                'RESOLVED': 3,
+                'CLOSED': 4,
+            };
+
+            const a = rowA.getValue(columnId) as keyof typeof statusOrder;
+            const b = rowB.getValue(columnId) as keyof typeof statusOrder;
+
+            return statusOrder[a] - statusOrder[b];
+        }
+    },
+    {
+        accessorKey: "title",
+        header: () => <div className="text-left">Ticket</div>,
         cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
     {
         accessorKey: "description",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-start"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Problem
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
+        header: () => <div className="text-left">Description</div>,
         cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
     {
         accessorKey: "priority",
-        header: () => <div className="text-left">Priority</div>,
+        header: ({ column }) => {
+            return (
+                <Button
+                    className="w-fit text-left"
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Priority
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
         cell: ({ row }) => {
             const priority: string = row.getValue("priority");
             return <div className={cn(`text-left font-medium`, {
@@ -168,6 +185,18 @@ const columns: ColumnDef<Ticket>[] = [
                 'text-green-500': priority === 'LOW',
             })}>{priority}</div>
         },
+        sortingFn: (rowA, rowB, columnId) => {
+            const priorityOrder = {
+                'HIGH': 1,
+                'MEDIUM': 2,
+                'LOW': 3,
+            };
+
+            const a = rowA.getValue(columnId) as keyof typeof priorityOrder;
+            const b = rowB.getValue(columnId) as keyof typeof priorityOrder;
+
+            return priorityOrder[a] - priorityOrder[b];
+        }
     },
     {
         accessorKey: "createdAt",

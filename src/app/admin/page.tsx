@@ -51,7 +51,7 @@ const Page = () => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
 
         try {
-            const response: AxiosResponse = await axios.post('/api/admin/login', values, {
+            const response: AxiosResponse = await axios.post('/api/auth/login', values, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

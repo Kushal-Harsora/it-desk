@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 // System imports
@@ -15,7 +14,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { email, z } from 'zod'
+import { z } from 'zod'
 import { useForm } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -28,7 +27,6 @@ import {
     Dialog,
     DialogClose,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -80,30 +78,16 @@ import { Calendar } from "@/components/ui/calendar"
 import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { ChartArea } from "@/components/custom/Chart-Area"
-// import { Checkbox } from "@/components/ui/checkbox"
 
 // Icon, Style and consts imports
 import { ArrowUpDown, CalendarIcon, ChevronDown, MoreHorizontal } from "lucide-react"
 import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
-
 // Ticket Type Definition
 import { Ticket } from "@/const/constVal"
-import { Priority, Status } from "@prisma/client"
 
-// Create Ticket Form Schema
-const TicketSchema = z.object({
-    title: z.string().min(1, {
-        message: "Ticket title is required"
-    }),
-    description: z.string().min(1, {
-        message: "Problem description is required"
-    }),
-    attachProof: z.instanceof(File).optional(),
-    priority: z.string(),
-    status: z.string()
-});
 
+// Form Schemas
 const CommentSchema = z.object({
     comment: z.string().min(1, {
         message: "Comment must be more than 1 character long"
@@ -131,16 +115,6 @@ const CalendarSchema = z.object({
 export default function Page() {
 
     // Form Handling
-    // const form = useForm<z.infer<typeof TicketSchema>>({
-    //     resolver: zodResolver(TicketSchema),
-    //     defaultValues: {
-    //         title: "",
-    //         description: "",
-    //         priority: Priority.LOW,
-    //         status: Status.OPEN
-    //     }
-    // });
-
     const commentForm = useForm<z.infer<typeof CommentSchema>>({
         resolver: zodResolver(CommentSchema),
         defaultValues: {
@@ -167,7 +141,6 @@ export default function Page() {
 
     const dialogCloseButton = React.useRef<HTMLButtonElement | null>(null);
 
-    const [openComment, setOpenComment] = React.useState(false);
     const [openCalendar, setOpenCalendar] = React.useState(false);
     const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
     const [loading, setLoading] = React.useState<boolean>(true);
@@ -186,43 +159,8 @@ export default function Page() {
     const [rowSelection, setRowSelection] = React.useState({})
 
     const columns: ColumnDef<Ticket>[] = [
-        // {
-        //     id: "select",
-        //     header: ({ table }) => (
-        //         <Checkbox
-        //             checked={
-        //                 table.getIsAllPageRowsSelected() ||
-        //                 (table.getIsSomePageRowsSelected() && "indeterminate")
-        //             }
-        //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        //             aria-label="Select all"
-        //         />
-        //     ),
-        //     cell: ({ row }) => (
-        //         <Checkbox
-        //             checked={row.getIsSelected()}
-        //             onCheckedChange={(value) => row.toggleSelected(!!value)}
-        //             aria-label="Select row"
-        //         />
-        //     ),
-        //     enableSorting: false,
-        //     enableHiding: false,
-        // },
         {
             accessorKey: "status",
-            header: () => <div className="text-start">Status</div>,
-            cell: ({ row }) => {
-                const status: string = row.getValue("status");
-                return <div className={cn(`text-left font-semibold`, {
-                    'text-red-500': status === 'OPEN',
-                    'text-yellow-500': status === 'IN_PRORESS',
-                    'text-green-500': status === 'RESOLVED',
-                    'text-blue-500': status === 'CLOSED',
-                })}>{status}</div>
-            },
-        },
-        {
-            accessorKey: "title",
             header: ({ column }) => {
                 return (
                     <Button
@@ -230,32 +168,62 @@ export default function Page() {
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     >
-                        Ticket
+                        Status
                         <ArrowUpDown />
                     </Button>
                 )
             },
+            cell: ({ row }) => {
+                const status: string = row.getValue("status");
+                return (
+                    <div className={cn(`text-left font-semibold`, {
+                        'text-red-500': status === 'OPEN',
+                        'text-yellow-500': status === 'IN_PROGRESS',
+                        'text-green-500': status === 'RESOLVED',
+                        'text-blue-500': status === 'CLOSED',
+                    })}>
+                        {status}
+                    </div>
+                )
+            },
+            sortingFn: (rowA, rowB, columnId) => {
+                const statusOrder = {
+                    'OPEN': 1,
+                    'IN_PROGRESS': 2,
+                    'RESOLVED': 3,
+                    'CLOSED': 4,
+                };
+
+                const a = rowA.getValue(columnId) as keyof typeof statusOrder;
+                const b = rowB.getValue(columnId) as keyof typeof statusOrder;
+
+                return statusOrder[a] - statusOrder[b];
+            }
+        },
+        {
+            accessorKey: "title",
+            header: () => <div className="text-left">Ticket</div>,
             cell: ({ row }) => <div>{row.getValue("title")}</div>,
         },
         {
             accessorKey: "description",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        className="w-fit text-start"
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Problem
-                        <ArrowUpDown />
-                    </Button>
-                )
-            },
+            header: () => <div className="text-left">Description</div>,
             cell: ({ row }) => <div>{row.getValue("description")}</div>,
         },
         {
             accessorKey: "priority",
-            header: () => <div className="text-left">Priority</div>,
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-left"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Priority
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
             cell: ({ row }) => {
                 const priority: string = row.getValue("priority");
                 return <div className={cn(`text-left font-medium`, {
@@ -264,6 +232,18 @@ export default function Page() {
                     'text-green-500': priority === 'LOW',
                 })}>{priority}</div>
             },
+            sortingFn: (rowA, rowB, columnId) => {
+                const priorityOrder = {
+                    'HIGH': 1,
+                    'MEDIUM': 2,
+                    'LOW': 3,
+                };
+
+                const a = rowA.getValue(columnId) as keyof typeof priorityOrder;
+                const b = rowB.getValue(columnId) as keyof typeof priorityOrder;
+
+                return priorityOrder[a] - priorityOrder[b];
+            }
         },
         {
             accessorKey: "createdAt",
@@ -591,7 +571,9 @@ export default function Page() {
                     },
                     duration: 1500
                 });
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
 
         } catch (error) {
@@ -665,7 +647,9 @@ export default function Page() {
                     },
                     duration: 1500
                 });
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
 
         } catch (error) {
