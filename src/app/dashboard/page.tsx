@@ -288,22 +288,30 @@ const columns: ColumnDef<Ticket>[] = [
                                             {row_data.description}
                                         </div>
                                     </div>
-                                    {(row_data.attachment != '') && <div className=" flex flex-col justify-center items-center gap-2">
+                                    {(row_data.attachment != '') && <div className=" flex flex-row justify-center items-center gap-2">
                                         <span className=" font-medium">Attachment: </span>
                                         {/* <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.attachment}
-                                        </div> */}
+                                                                                                {row_data.attachment}
+                                                                                            </div> */}
                                         <Button variant={'default'}>
                                             View Attachment
                                         </Button>
                                     </div>}
 
-                                    <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Comments: </span>
-                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.description}
-                                        </div>
-                                    </div>
+                                    {(row_data.comments.length > 0) ? (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                        <span className=" font-medium">Commnets: </span>
+                                        {row_data.comments.map((comment_data, index) => (
+                                            <div key={index} className="bg-gray-100 p-2 rounded-lg w-full h-fit max-h-[200px] overflow-auto text-wrap">
+                                                {comment_data.message}
+                                            </div>
+                                        ))}
+                                    </div>) : 
+                                    (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Commnets: </span>
+                                            <div className="text-center w-full h-fit overflow-auto text-wrap">
+                                                No Comment Found
+                                            </div>
+                                    </div>)}
                                 </div>
                             </DialogContent>
                         </Dialog>

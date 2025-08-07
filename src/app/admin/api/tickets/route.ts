@@ -7,6 +7,8 @@ import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
 import { toZonedTime } from 'date-fns-tz'
 import { timeZone } from '@/const/constVal';
+// import jwt from 'jsonwebtoken';
+// import { cookies } from 'next/headers';
 // import { promises as fs, stat } from 'fs';
 // import { success } from 'zod';
 
@@ -81,10 +83,28 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    // const cookieStore = await cookies();
+    // const token = cookieStore.get('token')?.value;
+
+    // if (!token) {
+    //   return NextResponse.json({ error: "Unauthorized: No token provided" }, { status: 401 });
+    // }
+
+    // const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload | string;
+
+    // let name = '';
+    // let email = '';
+
+    // if (typeof decoded === 'object' && decoded !== null && 'name' in decoded && 'email' in decoded) {
+    //   name = (decoded as { name: string }).name;
+    //   email = (decoded as { email: string }).email;
+    // } else {
+    //   return NextResponse.json({ error: "Invalid token payload" }, { status: 401 });
+    // }
+
     const { searchParams } = new URL(req.url);
     const start = searchParams.get('start');
     const end = searchParams.get('end');
-    console.log("Inside the get request!!!")
     let where = {};
 
     if (start && end) {
@@ -101,7 +121,16 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-    });    return NextResponse.json({ tickets }, { status: 200 });
+      include: {
+        comments: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

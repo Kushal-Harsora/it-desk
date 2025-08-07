@@ -15,7 +15,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { z } from 'zod'
+import { email, z } from 'zod'
 import { useForm } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -107,7 +107,8 @@ const TicketSchema = z.object({
 const CommentSchema = z.object({
     comment: z.string().min(1, {
         message: "Comment must be more than 1 character long"
-    })
+    }),
+    ticketId: z.number()
 })
 
 const CalendarSchema = z.object({
@@ -340,7 +341,12 @@ export default function Page() {
                                         <DialogTitle>Add/Edit Comment</DialogTitle>
                                     </DialogHeader>
                                     <Form {...commentForm}>
-                                        <form onSubmit={commentForm.handleSubmit(handleSubmitComment)} className="space-y-4">
+                                        <form onSubmit={commentForm.handleSubmit(onSubmitComment)} className="space-y-4">
+                                            <input
+                                                type="hidden"
+                                                value={row_data.id}
+                                                {...commentForm.register("ticketId", { valueAsNumber: true })}
+                                            />
                                             <FormField
                                                 control={commentForm.control}
                                                 name="comment"
@@ -407,7 +413,7 @@ export default function Page() {
                                                 {row_data.description}
                                             </div>
                                         </div>
-                                        {(row_data.attachment != '') && <div className=" flex flex-col justify-center items-center gap-2">
+                                        {(row_data.attachment != '') && <div className=" flex flex-row justify-center items-center gap-2">
                                             <span className=" font-medium">Attachment: </span>
                                             {/* <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
                                                                 {row_data.attachment}
@@ -417,11 +423,20 @@ export default function Page() {
                                             </Button>
                                         </div>}
 
-                                        <div className="w-full flex flex-row justify-evenly items-center">
-                                            <Button variant={'outline'}>
-                                                Update Status
-                                            </Button>
-                                        </div>
+                                        {(row_data.comments.length > 0) ? (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Commnets: </span>
+                                            {row_data.comments.map((comment_data, index) => (
+                                                <div key={index} className="bg-gray-100 p-2 rounded-lg w-full h-fit max-h-[200px] overflow-auto text-wrap">
+                                                    {comment_data.message}
+                                                </div>
+                                            ))}
+                                        </div>) : 
+                                        (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                                <span className=" font-medium">Commnets: </span>
+                                                <div className="text-center w-full h-fit overflow-auto text-wrap">
+                                                    No Comment Found
+                                                </div>
+                                        </div>)}
                                     </div>
                                 </DialogContent>
                             </Dialog>
@@ -456,7 +471,9 @@ export default function Page() {
     // Get the Ticket Data
     React.useEffect(() => {
         const getData = async () => {
-            const response_ticket: AxiosResponse = await axios.get('api/tickets');
+            const response_ticket: AxiosResponse = await axios.get('api/tickets', {
+                withCredentials: true
+            });
             if (response_ticket.status === 200) {
                 setTicketData(response_ticket.data.tickets);
                 console.log(response_ticket.data.tickets);
@@ -476,13 +493,13 @@ export default function Page() {
         getData();
     }, []);
 
-    const handleSubmitComment = async (values: z.infer<typeof CommentSchema>) => {
-        console.log(values);
-        if (dialogCloseButton.current) {
-            dialogCloseButton.current.click();
-        }
-        // setOpenComment(false);
-    }
+    // const handleSubmitComment = async (values: z.infer<typeof CommentSchema>) => {
+    //     console.log(values);
+    //     if (dialogCloseButton.current) {
+    //         dialogCloseButton.current.click();
+    //     }
+    //     // setOpenComment(false);
+    // }
 
     // const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
@@ -543,6 +560,81 @@ export default function Page() {
             setOpenCalendar(false);
         } catch (error) {
             console.error("Error fetching filtered tickets:", error);
+        }
+    }
+
+    const onSubmitComment = async (values: z.infer<typeof CommentSchema>) => {
+        try {
+            const formData = {
+                email: window.localStorage.getItem("email"),
+                name: window.localStorage.getItem("name"),
+                ...values
+            }
+            console.log(formData);
+            const response: AxiosResponse = await axios.post('api/comment', formData, {
+                headers: {
+                    'Content-Type': 'Application/json'
+                }
+            });
+            const data = response.data;
+            if (response.status === 201) {
+                commentForm.reset();
+                toast.success(data.message || "Added Comment Successfully", {
+                    style: {
+                        "backgroundColor": "#D5F5E3",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 1500
+                });
+                window.location.reload();
+            }
+
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 500) {
+                    toast.error(data.message || "Failed to add comment to ticket", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    commentForm.reset();
+                } else if (status === 404) {
+                    toast.error(data.message || "Admin not found. Kindly login again.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    commentForm.reset();
+                } else if (status === 401) {
+                    toast.error(data.message || "Some error creating comment", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    commentForm.reset();
+                }
+            } else {
+                toast.error("Some Unknown error occured. Try Again later.", {
+                    style: {
+                        "backgroundColor": "#FADBD8",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 2500
+                });
+                commentForm.reset();
+            }
         }
     }
 

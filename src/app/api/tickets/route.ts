@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs';
-import path from 'path';
+// import { writeFile } from 'fs';
+// import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '@/db/prisma';
 import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
 import fs from 'fs';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+// import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { toZonedTime } from 'date-fns-tz';
+import { timeZone } from '@/const/constVal';
 
 
 
@@ -132,17 +134,15 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        priority: true,
-        createdAt: true,
-        updatedAt: true,
-        attachment: true, // <- Add this to explicitly include the image URL
-      },
+      include: {
+        comments: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
     });
-
+    
     return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
