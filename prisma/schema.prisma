@@ -22,7 +22,6 @@ model Ticket {
   attachment  String?     
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  tickets     Int? 
   comments    Comment[]   
   technician  Technician? @relation(fields: [technicianId], references: [id])
   technicianId Int?

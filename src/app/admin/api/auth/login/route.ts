@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
         if (!user) {
             return NextResponse.json({
-                message: "User not found"
+                message: "Admin not found"
             }, {
                 status: 404
             })
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
 
                 const response = NextResponse.json({
-                    message: "Success",
+                    message: "Login Successful",
                     name: user.name,
                     email: user.email
                 }, {

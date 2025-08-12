@@ -13,39 +13,35 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Button } from "../ui/button"
+import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import axios, { AxiosResponse } from "axios";
 import React from "react";
+import Link from "next/link";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/admin/dashboard",
     icon: Home,
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/admin/dashboard/settings",
     icon: Settings,
   },
 ]
 
-interface props {
-  title: string,
-  logout: string,
-  logoutpath: string
-}
 
-export const AppSidebar: React.FC<props> = (props) => {
+export const AppSidebar = () => {
 
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      const response: AxiosResponse = await axios.get(`${props.logout}`);
+      const response: AxiosResponse = await axios.get('api/auth/logout');
       const data = response.data
       if (data && response.status === 200) {
         toast.success(data.message || "Logout successful", {
@@ -59,7 +55,7 @@ export const AppSidebar: React.FC<props> = (props) => {
 
         window.localStorage.removeItem("name");
         window.localStorage.removeItem("email");
-        router.push(`${props.logoutpath}`);
+        router.push('/admin');
       }
     } catch (error) {
       console.error("Error on Logout", error);
@@ -78,22 +74,22 @@ export const AppSidebar: React.FC<props> = (props) => {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{props.title}</SidebarGroupLabel>
+          <SidebarGroupLabel>Admin Desk</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col justify-between flex-1 h-full">
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
 
-            <SidebarFooter className=" hover:bg-red-400 rounded-2xl">
+            <SidebarFooter className=" bg-red-300">
               <Button
                 variant={'destructive'}
                 onClick={handleLogout}

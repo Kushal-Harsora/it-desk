@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs';
-import path from 'path';
+// import { writeFile } from 'fs';
+// import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { prisma } from '@/db/prisma';
 import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
 import fs from 'fs';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+// import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { toZonedTime } from 'date-fns-tz';
+import { timeZone } from '@/const/constVal';
 
 
 
@@ -31,15 +33,25 @@ export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseForm(req);
 
-    console.log("Fields:", fields);
-
-
     const title = fields.title?.[0] || '';
     const description = fields.description?.[0] || '';
     const priority = fields.priority?.[0] || '';
+    const name = fields.name?.[0];
+    const email = fields.email?.[0];
 
-    if (!description || !priority || !title) {
+    if (!description || !priority || !title || !name || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const technician = await prisma.technician.findUnique({
+      where: {
+        email: email,
+        name: name
+      }
+    });
+
+    if(!technician) {
+      return NextResponse.json({ error: "Technician not found. Kindly Login Again." }, { status: 404 });
     }
 
     let fileName = '';
@@ -74,8 +86,9 @@ export async function POST(req: NextRequest) {
         priority: Priority[priority.toUpperCase() as keyof typeof Priority] || Priority.LOW,
         title,
         attachment: fileName,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: toZonedTime(new Date(), timeZone),
+        updatedAt: toZonedTime(new Date(), timeZone),
+        technicianId: technician.id
       },
     });
 
@@ -107,16 +120,42 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+
+    const name = searchParams.get('name');
+    const email = searchParams.get('email');
+
+    if (!name || !email) {
+      return NextResponse.json({ error: "Necessary Field entires not found." }, { status: 401 });
+    }
+
     const start = searchParams.get('start');
     const end = searchParams.get('end');
+
+    const technician = await prisma.technician.findUnique({
+      where: {
+        name: name,
+        email: email
+      }
+    });
+
+    if (!technician) {
+      return NextResponse.json({ error: "Technician not found. Kindly Login Again." }, { status: 404 });
+    }
 
     let where = {};
 
     if (start && end) {
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+
       where = {
+        technicianId: technician.id,
         createdAt: {
-          gte: new Date(start),
-          lte: new Date(end),
+          gte: toZonedTime(startDate, timeZone),
+          lte: toZonedTime(endDate, timeZone),
         },
       };
     }
@@ -126,21 +165,19 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        priority: true,
-        createdAt: true,
-        updatedAt: true,
-        attachment: true, 
-      },
+      include: {
+        comments: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
     });
 
     return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error.", errorMessage: error instanceof Error ? error.message : error }, { status: 500 });
   }
 }
 

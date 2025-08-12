@@ -18,6 +18,9 @@ import { z } from 'zod'
 import { useForm } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { format, toZonedTime } from 'date-fns-tz'
+import axios, { AxiosResponse } from "axios"
+
 
 // Component imports
 import {
@@ -65,16 +68,21 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
+import { ChartArea } from "@/components/custom/Chart-Area"
 // import { Checkbox } from "@/components/ui/checkbox"
 
-// Icon and Style imports
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
-import axios, { AxiosResponse } from "axios"
-import { Priority, Status } from "@prisma/client"
-import { ChartArea } from "@/components/custom/Chart-Area"
-
+// Icon, Style and consts imports
+import { ArrowUpDown, CalendarIcon, MoreHorizontal, SlidersHorizontal } from "lucide-react"
+import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
 // Ticket Type Definition
 export type Ticket = {
@@ -101,22 +109,20 @@ const TicketSchema = z.object({
     priority: z.string()
 });
 
+const CalendarSchema = z.object({
+    dateRange: z.object({
+        from: z.date({
+            error: "Start date is required",
+        }),
+        to: z.date({
+            error: "End date is required",
+        }),
+    }),
+})
+
 const columns: ColumnDef<Ticket>[] = [
     {
         accessorKey: "status",
-        header: () => <div className="text-start">Status</div>,
-        cell: ({ row }) => {
-            const status: string = row.getValue("status");
-            return <div className={cn(`text-left font-semibold`, {
-                'text-red-500': status === 'OPEN',
-                'text-yellow-500': status === 'IN_PRORESS',
-                'text-green-500': status === 'RESOLVED',
-                'text-blue-500': status === 'CLOSED',
-            })}>{status}</div>
-        },
-    },
-    {
-        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button
@@ -124,32 +130,62 @@ const columns: ColumnDef<Ticket>[] = [
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Ticket
+                    Status
                     <ArrowUpDown />
                 </Button>
             )
         },
+        cell: ({ row }) => {
+            const status: string = row.getValue("status");
+            return (
+                <div className={cn(`text-left font-semibold`, {
+                    'text-red-500': status === 'OPEN',
+                    'text-yellow-500': status === 'IN_PROGRESS',
+                    'text-green-500': status === 'RESOLVED',
+                    'text-blue-500': status === 'CLOSED',
+                })}>
+                    {status}
+                </div>
+            )
+        },
+        sortingFn: (rowA, rowB, columnId) => {
+            const statusOrder = {
+                'OPEN': 1,
+                'IN_PROGRESS': 2,
+                'RESOLVED': 3,
+                'CLOSED': 4,
+            };
+
+            const a = rowA.getValue(columnId) as keyof typeof statusOrder;
+            const b = rowB.getValue(columnId) as keyof typeof statusOrder;
+
+            return statusOrder[a] - statusOrder[b];
+        }
+    },
+    {
+        accessorKey: "title",
+        header: () => <div className="text-left">Ticket</div>,
         cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
     {
         accessorKey: "description",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-start"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Problem
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
+        header: () => <div className="text-left">Description</div>,
         cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
     {
         accessorKey: "priority",
-        header: () => <div className="text-left">Priority</div>,
+        header: ({ column }) => {
+            return (
+                <Button
+                    className="w-fit text-left"
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Priority
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
         cell: ({ row }) => {
             const priority: string = row.getValue("priority");
             return <div className={cn(`text-left font-medium`, {
@@ -157,6 +193,64 @@ const columns: ColumnDef<Ticket>[] = [
                 'text-yellow-500': priority === 'MEDIUM',
                 'text-green-500': priority === 'LOW',
             })}>{priority}</div>
+        },
+        sortingFn: (rowA, rowB, columnId) => {
+            const priorityOrder = {
+                'HIGH': 1,
+                'MEDIUM': 2,
+                'LOW': 3,
+            };
+
+            const a = rowA.getValue(columnId) as keyof typeof priorityOrder;
+            const b = rowB.getValue(columnId) as keyof typeof priorityOrder;
+
+            return priorityOrder[a] - priorityOrder[b];
+        }
+    },
+    {
+        accessorKey: "createdAt",
+        header: ({ column }) => {
+            return (
+                <div className="w-fit">
+                    <Button
+                        className="w-fit text-center"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Date of Creation
+                        <ArrowUpDown />
+                    </Button>
+                </div>
+            )
+        },
+        cell: ({ row }) => {
+            const createdAt: Date = row.getValue("createdAt");
+            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+            return <div className='font-medium text-center'>{formattedDate}</div>
+        },
+    },
+    {
+        accessorKey: "updatedAt",
+        header: ({ column }) => {
+            return (
+                <div className="w-fit">
+                    <Button
+                        className="w-fit text-center"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Last Updated
+                        <ArrowUpDown />
+                    </Button>
+                </div>
+            )
+        },
+        cell: ({ row }) => {
+            const createdAt: Date = row.getValue("updatedAt");
+            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+            return <div className='font-medium text-center'>{formattedDate}</div>
         },
     },
     {
@@ -203,7 +297,7 @@ const columns: ColumnDef<Ticket>[] = [
                                     </DialogTitle>
                                 </DialogHeader>
                                 <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
-                                    <div className=" w-full h-fit flex flex-row justify-evenly items-center">
+                                    <div className=" w-full h-fit flex flex-row max-md:flex-col justify-evenly items-center">
                                         <div className=" flex flex-row gap-1 justify-center items-center">
                                             <span className=" font-medium">Status: </span>
                                             <div className={cn(`text-left font-medium`, {
@@ -247,12 +341,20 @@ const columns: ColumnDef<Ticket>[] = [
                                     )}
 
 
-                                    <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Comments: </span>
-                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.description}
-                                        </div>
-                                    </div>
+                                    {(row_data.comments.length > 0) ? (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                        <span className=" font-medium">Commnets: </span>
+                                        {row_data.comments.map((comment_data, index) => (
+                                            <div key={index} className="bg-gray-100 p-2 rounded-lg w-full h-fit max-h-[200px] overflow-auto text-wrap">
+                                                {comment_data.message}
+                                            </div>
+                                        ))}
+                                    </div>) :
+                                        (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Commnets: </span>
+                                            <div className="text-center w-full h-fit overflow-auto text-wrap">
+                                                No Comment Found
+                                            </div>
+                                        </div>)}
                                 </div>
                             </DialogContent>
                         </Dialog>
@@ -302,7 +404,7 @@ export default function Page() {
     )
     const [pagination, setPagination] = React.useState({
         pageIndex: 0,
-        pageSize: 8,
+        pageSize: 5,
     });
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({})
@@ -334,16 +436,63 @@ export default function Page() {
 
     // Get the Ticket Data
     React.useEffect(() => {
-        axios.get("/api/tickets")
-            .then((res) => {
-                console.log(res.data.tickets)
-                setFilteredTickets(res.data.tickets);
-            })
-            .catch((err) => {
-                console.error("Error fetching tickets:", err);
+        const getData = async () => {
+
+            try {
+                const name: string = window.localStorage.getItem("name") as string;
+                const email: string = window.localStorage.getItem("email") as string;
+
+                const response_ticket: AxiosResponse = await axios.get(`api/tickets?name=${name}&email=${email}&start=${toZonedTime(new Date('1900-01-01T00:00:00Z'), timeZone)}&end=${toZonedTime(new Date(), timeZone)}`);
+                if (response_ticket.status === 200) {
+                    setTicketData(response_ticket.data.tickets);
+                }
+
+                const response_chart: AxiosResponse = await axios.get(`api/chart?name=${name}&email=${email}`);
+                if (response_chart.status === 200) {
+                    setStatus(response_chart.data.status);
+                    setPriority(response_chart.data.priority);
+                }
+
+                if (response_chart.status === 200 && response_ticket.status === 200) {
+                    setLoading(false);
+                }
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                    const { status, data } = error.response;
+                    if (status === 401) {
+                        toast.error(data.error || "Necessary Field entires not found.", {
+                            style: {
+                                "backgroundColor": "#FADBD8",
+                                "color": "black",
+                                "border": "none"
+                            },
+                            duration: 2500
+                        })
+                    } else if (status === 404) {
+                        toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                            style: {
+                                "backgroundColor": "#FADBD8",
+                                "color": "black",
+                                "border": "none"
+                            },
+                            duration: 2500
+                        })
+                    } else if (status === 500) {
+                        toast.error(data.error || "Internal Server Error.", {
+                            style: {
+                                "backgroundColor": "#FADBD8",
+                                "color": "black",
+                                "border": "none"
+                            },
+                            duration: 2500
+                        });
+                        console.error(data.errorMessage);
+                    }
+                }
             }
-            )
-            ;
+        }
+
+        getData();
     }, []);
 
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
@@ -375,7 +524,7 @@ export default function Page() {
                     },
                     duration: 1500
                 });
-                setOpen(false);
+                setOpenTicket(false);
                 window.location.reload();
             }
         } catch (error) {
@@ -391,15 +540,75 @@ export default function Page() {
                         duration: 2500
                     })
                     form.reset();
+                } else if (status === 404) {
+                    toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                    form.reset();
                 }
             }
         }
 
     }
 
+    const onSubmitCalendar = async (data: { dateRange: { from: Date; to: Date } }) => {
+        try {
+
+            const name: string = window.localStorage.getItem("name") as string;
+            const email: string = window.localStorage.getItem("email") as string;
+
+            const from = toZonedTime(new Date(data.dateRange.from.toISOString()), timeZone);
+            const to = toZonedTime(new Date(data.dateRange.to.toISOString()), timeZone);
+
+            const res = await axios.get(`/api/tickets?name=${name}&email=${email}&start=${from}&end=${to}`);
+            setTicketData(res.data.tickets);
+            setOpenCalendar(false);
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                const { status, data } = error.response;
+                if (status === 401) {
+                    toast.error(data.error || "Necessary Field entires not found.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                } else if (status === 404) {
+                    toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    })
+                } else if (status === 500) {
+                    toast.error(data.error || "Internal Server Error.", {
+                        style: {
+                            "backgroundColor": "#FADBD8",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 2500
+                    });
+                    console.error(data.errorMessage);
+                }
+            }
+        }
+    }
+
+    if (loading) return <div className=" flex-1 h-full overflow-hidden flex items-center justify-center">Loading ticket</div>
+
     return (
         <main className="flex-1 h-fit items-center justify-center max-md:px-[3.5vw]">
-            <ChartArea />
+            <ChartArea priority={priority} status={status} />
             <div className="w-full h-full px-[2.5vw] flex flex-col items-center justify-center gap-2">
                 <div className="w-full flex justify-evenly items-center gap-2 py-4">
                     <Input
@@ -589,7 +798,36 @@ export default function Page() {
                         {table.getFilteredSelectedRowModel().rows.length} of{" "}
                         {table.getFilteredRowModel().rows.length} row(s) selected.
                     </div> */}
-                    <div className="space-x-2">
+                    <div className="w-fit items-center gap-2 flex flex-row">
+                        <Label htmlFor="rows-per-page" className="text-sm max-md:text-xs font-medium">
+                            Rows per page
+                        </Label>
+                        <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={(value) => {
+                                table.setPageSize(Number(value))
+                            }}
+                        >
+                            <SelectTrigger className="w-20" id="rows-per-page">
+                                <SelectValue
+                                    placeholder={table.getState().pagination.pageSize}
+                                />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                                        {pageSize}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-fit items-center justify-center text-sm max-md:text-xs font-medium">
+                        Page {table.getState().pagination.pageIndex + 1} of{" "}
+                        {table.getPageCount()}
+                    </div>
+
+                    <div className="flex flex-row space-x-2 max-md:space-x-1">
                         <Button
                             variant="outline"
                             size="sm"
