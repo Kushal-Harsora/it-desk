@@ -54,7 +54,7 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
 
-            <SidebarFooter className=" bg-red-300">
+            <SidebarFooter className=" hover:bg-red-400 rounded-2xl">
               <Button
                 variant={'destructive'}
                 onClick={() => {

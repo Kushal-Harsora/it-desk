@@ -21,6 +21,13 @@ import { CalendarIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { Priority, Status } from "@prisma/client"
+
+import {
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -53,10 +60,13 @@ import {
 type Ticket = {
     id: string
     title: string
-    problem: string
-    status: string
-    priority: string
-    description: string
+    priority: string,
+    status: Status,
+    ticket: string,
+    description: string,
+    createdAt: Date,
+    attachment: string,
+    attachmentUrl: string
 }
 
 export default function AdminDashboard() {
@@ -112,10 +122,11 @@ export default function AdminDashboard() {
             header: () => <div className="text-start">Status</div>,
             cell: ({ row }) => {
                 const status: string = row.getValue("status");
-                return <div className={cn(`text-left font-medium`, {
-                    'text-red-500': status === 'open',
-                    'text-yellow-500': status === 'in progress',
-                    'text-green-500': status === 'closed',
+                return <div className={cn(`text-left font-semibold`, {
+                    'text-red-500': status === 'OPEN',
+                    'text-yellow-500': status === 'IN_PRORESS',
+                    'text-green-500': status === 'RESOLVED',
+                    'text-blue-500': status === 'CLOSED',
                 })}>{status}</div>
             },
         },
@@ -157,28 +168,113 @@ export default function AdminDashboard() {
             cell: ({ row }) => {
                 const priority: string = row.getValue("priority");
                 return <div className={cn(`text-left font-medium`, {
-                    'text-red-500': priority.toLowerCase() === 'high',
-                    'text-yellow-500': priority.toLowerCase() === 'medium',
-                    'text-green-500': priority.toLowerCase() === 'low',
+                    'text-red-500': priority === 'HIGH',
+                    'text-yellow-500': priority === 'MEDIUM',
+                    'text-green-500': priority === 'LOW',
                 })}>{priority}</div>
             },
         },
         {
-            id: "view",
-            header: "View",
-            cell: ({ row }) => (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                        alert(
-                            `Ticket Details:\n\nTitle: ${row.original.title}\nProblem: ${row.original.problem}\nStatus: ${row.original.status}\nPriority: ${row.original.priority}\nDescription: ${row.original.description}`
-                        )
-                    }
-                >
-                    <Eye className="h-4 w-4" />
-                </Button>
-            ),
+            id: "actions",
+            enableHiding: false,
+            cell: ({ row }) => {
+                const title = row.original.title
+                const row_data = row.original;
+                const createdAt = new Date(row_data.createdAt);
+
+                const formattedDate = new Intl.DateTimeFormat('en-IN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    timeZone: 'Asia/Kolkata',
+                }).format(createdAt);
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant={'ghost'} className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => navigator.clipboard.writeText(title)}
+                            >
+                                Copy Ticket Name
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className=" w-full" variant={'ghost'}>
+                                        View Details
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle className=" text-center">
+                                            Ticket Details for <span className=" font-bold text-blue-500">{row_data.title}</span>
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
+                                        <div className=" w-full h-fit flex flex-row justify-evenly items-center">
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Status: </span>
+                                                <div className={cn(`text-left font-medium`, {
+                                                    'text-red-500': row_data.status === 'OPEN',
+                                                    'text-yellow-500': row_data.status === 'IN_PROGRESS',
+                                                    'text-green-500': row_data.status === 'RESOLVED',
+                                                    'text-blue-500': row_data.status === 'CLOSED',
+                                                })}>{row_data.status}</div>
+                                            </div>
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Priority: </span>
+                                                <div className={cn(`text-left font-medium`, {
+                                                    'text-red-500': row_data.priority === 'HIGH',
+                                                    'text-yellow-500': row_data.priority === 'MEDIUM',
+                                                    'text-green-500': row_data.priority === 'LOW',
+                                                })}>{row_data.priority}</div>
+                                            </div>
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Date: </span>
+                                                <div className="text-left font-medium">{formattedDate}</div>
+                                            </div>
+                                        </div>
+                                        <div className=" flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Description: </span>
+                                            <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                                {row_data.description}
+                                            </div>
+                                        </div>
+                                        {row_data?.attachment && row_data?.id && (
+                                            <div className="flex flex-col justify-center items-center gap-2">
+                                                <span className="font-medium">Attachment:</span>
+                                                <a
+                                                    href={`/api/tickets/${row_data.id}/attachment`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Button>View Attachment</Button>
+                                                </a>
+
+                                            </div>
+                                        )}
+
+
+                                        <div className=" flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Comments: </span>
+                                            <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                                {row_data.description}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )
+            },
         },
     ]
 
@@ -203,19 +299,19 @@ export default function AdminDashboard() {
         }),
     })
 
-const today = new Date();
-const weekAgo = new Date();
-weekAgo.setDate(today.getDate() - 7);
+    const today = new Date();
+    const weekAgo = new Date();
+    weekAgo.setDate(today.getDate() - 7);
 
-const form = useForm({
-  resolver: zodResolver(FormSchema),
-  defaultValues: {
-    dateRange: {
-      from: weekAgo,
-      to: today,
-    },
-  },
-});
+    const form = useForm({
+        resolver: zodResolver(FormSchema),
+        defaultValues: {
+            dateRange: {
+                from: weekAgo,
+                to: today,
+            },
+        },
+    });
 
     // this goes in the same component as your <form> and the <Table>
 
