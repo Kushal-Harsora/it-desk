@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken'
 export async function POST(request: NextRequest) {
     try {
         const { email, password } = await request.json();
-
+        
         const user = await prisma.admin.findUnique({
             where: {
                 email: email
