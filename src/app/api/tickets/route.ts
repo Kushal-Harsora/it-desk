@@ -112,11 +112,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
 }
-
-
-
-
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -125,24 +120,19 @@ export async function GET(req: NextRequest) {
     const email = searchParams.get('email');
 
     if (!name || !email) {
-      return NextResponse.json({ error: "Necessary Field entires not found." }, { status: 401 });
+      console.log(name+"  "+email)
+      return NextResponse.json({ error: "Necessary Field entries not found." }, { status: 401 });
     }
+
+    // Identify if user is a super admin
+    const superAdmin = await prisma.superadmin.findUnique({
+      where: { name, email }
+    });
 
     const start = searchParams.get('start');
     const end = searchParams.get('end');
 
-    const technician = await prisma.technician.findUnique({
-      where: {
-        name: name,
-        email: email
-      }
-    });
-
-    if (!technician) {
-      return NextResponse.json({ error: "Technician not found. Kindly Login Again." }, { status: 404 });
-    }
-
-    let where = {};
+    let where: any = {};
 
     if (start && end) {
       const startDate = new Date(start);
@@ -151,35 +141,43 @@ export async function GET(req: NextRequest) {
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
 
-      where = {
-        technicianId: technician.id,
-        createdAt: {
-          gte: toZonedTime(startDate, timeZone),
-          lte: toZonedTime(endDate, timeZone),
-        },
+      where.createdAt = {
+        gte: toZonedTime(startDate, timeZone),
+        lte: toZonedTime(endDate, timeZone),
       };
+    }
+
+    // If not super admin, check technician and filter tickets by technicianId
+    if (!superAdmin) {
+      const technician = await prisma.technician.findUnique({
+        where: { name, email }
+      });
+
+      if (!technician) {
+        return NextResponse.json({ error: "User not found or not authorized." }, { status: 404 });
+      }
+
+      where.technicianId = technician.id;
     }
 
     const tickets = await prisma.ticket.findMany({
       where,
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
       include: {
-        comments: {
-          orderBy: {
-            createdAt: 'desc'
-          }
-        }
+        comments: { orderBy: { createdAt: 'desc' } }
       }
     });
 
     return NextResponse.json({ tickets }, { status: 200 });
   } catch (error) {
     console.error("Error fetching tickets:", error);
-    return NextResponse.json({ error: "Internal Server Error.", errorMessage: error instanceof Error ? error.message : error }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error.", errorMessage: error instanceof Error ? error.message : error },
+      { status: 500 }
+    );
   }
 }
+
 
 
 

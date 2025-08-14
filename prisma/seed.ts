@@ -4,31 +4,26 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const hashedPassword = await bcrypt.hash("test12345", 10);
+  const hashedPassword = await bcrypt.hash('SuperSecret123', 10);
 
-  await prisma.technician.create({
-    data: {
-      name: "Test Technician",
-      email: "user@test.com",
-      password: hashedPassword,
-    },
-  });
+  await prisma.superadmin.upsert({
+  where: { email: 'superadmin@example.com' },
+  update: {},
+  create: {
+    name: 'Super Admin',
+    email: 'superadmin@example.com',
+    password: hashedPassword
+  }
+});
 
-  await prisma.admin.create({
-    data: {
-      name: "Test Admin",
-      email: "admin@test.com",
-      password: hashedPassword,
-    },
-  });
-
-  console.log("✅ Dummy technician and admin created!");
+  console.log('Super admin created!');
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Error seeding:", e);
+    console.error(e);
+    process.exit(1);
   })
-  .finally(() => {
-    prisma.$disconnect();
+  .finally(async () => {
+    await prisma.$disconnect();
   });
