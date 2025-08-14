@@ -9,6 +9,7 @@ export function middleware(request: NextRequest) {
 
   const isLoginPath: boolean = path === "/login";
   const isLoginPathAdmin: boolean = path === '/admin';
+  const isLoginSuperAdmin: boolean = path === '/superAdmin';
 
   const token = request.cookies.get("token")?.value || "";
 
@@ -29,7 +30,7 @@ export function middleware(request: NextRequest) {
       });
       return response;
     }
-    else if(isPrivatePathsuperAdmin){
+    else if(isLoginSuperAdmin){
       const response = NextResponse.redirect(new URL("/superAdmin", request.url));
       response.cookies.set("token", "", {
         httpOnly: true,
