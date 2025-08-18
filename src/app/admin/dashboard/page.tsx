@@ -466,7 +466,7 @@ export default function Page() {
                                         </div>}
 
                                         {(row_data.comments.length > 0) ? (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
-                                            <span className=" font-medium">Commnets: </span>
+                                            <span className=" font-medium">Comments: </span>
                                             {row_data.comments.map((comment_data, index) => (
                                                 <div key={index} className="bg-gray-100 p-2 rounded-lg w-full h-fit max-h-[200px] overflow-auto text-wrap">
                                                     {comment_data.message}
@@ -474,7 +474,7 @@ export default function Page() {
                                             ))}
                                         </div>) :
                                             (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
-                                                <span className=" font-medium">Commnets: </span>
+                                                <span className=" font-medium">Comments: </span>
                                                 <div className="text-center w-full h-fit overflow-auto text-wrap">
                                                     No Comment Found
                                                 </div>

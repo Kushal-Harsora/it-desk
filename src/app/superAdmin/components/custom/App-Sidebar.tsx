@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Settings } from "lucide-react"
+import { Home, Settings, UserRoundSearch, Wrench } from "lucide-react"
 
 import {
   Sidebar,
@@ -19,14 +19,26 @@ import { useRouter } from "next/navigation"
 import axios, { AxiosResponse } from "axios";
 import React from "react";
 import Link from "next/link";
+import { title } from "process";
+import { ur } from "zod/v4/locales";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "/admin/dashboard",
+    url: "/superAdmin/dashboard",
     icon: Home,
   },
+  {
+    title: "Admins",
+    url:"/superAdmin/admins",
+    icon: UserRoundSearch,
+  },
+ {
+    title: "Technicians",
+    url:"/superAdmin/technicians",
+    icon: Wrench,
+  }, 
   {
     title: "Settings",
     url: "/admin/dashboard/settings",
@@ -74,12 +86,12 @@ export const AppSidebar = () => {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Super-Admin Desk</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-2xl mb-4 font-bold">Super-Admin Desk</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col justify-between flex-1 h-full">
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="text-[16px] ">
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -89,8 +101,8 @@ export const AppSidebar = () => {
               ))}
             </SidebarMenu>
 
-            <SidebarFooter className=" bg-red-300">
-              <Button
+            <SidebarFooter >
+              <Button className="w-[100px] flex flex-col justify-items-start  "
                 variant={'destructive'}
                 onClick={handleLogout}
               >
