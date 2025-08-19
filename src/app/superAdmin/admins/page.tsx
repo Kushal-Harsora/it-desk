@@ -84,7 +84,6 @@ export default function Page() {
     const [deleted, setDeleted] = useState(false);
     const [updated, setUpdated] = useState(false);
 
-    const [openEdit, setOpenEdit] = useState(false)
     const [adminIdToDelete, setAdminIdToDelete] = useState<number | null>(null);
     const [adminIdToUpdate, setAdminIdToUpdate] = useState<number | null>(null);
     const [add, setAdd] = useState(false)
@@ -106,6 +105,49 @@ export default function Page() {
 
         getData();
     }, []);
+
+    const [adminForm, setAdminForm] = useState({ name: "", email: "", password: "" })
+                const handleAddChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    e.preventDefault()
+                    const { name, value } = e.target
+                    setAdminForm((prev) => ({ ...prev, [name]: value }))
+                }
+
+                const handleAdd = async () => {
+                    try {
+                        const response = await axios.post("/api/superAdmin/admins"
+                            , {
+                                name: adminForm.name,
+                                email: adminForm.email,
+                                password: adminForm.password
+                            }
+                            , { withCredentials: true })
+                        const new_admin = response.data
+                        setAdmins((prev) => [...prev, new_admin])
+
+                        if(response.status==201){
+                            toast.success("Successfully Added New Admin",
+                                {
+                                style: {
+                                    "backgroundColor": "#D5F5E3",
+                                    "color": "black",
+                                    "border": "none"
+                                },
+                                duration: 1500
+                            })
+                            
+                        }
+
+                    } catch (error) {
+                        toast.error("Failed to add new admin!!",
+                            {
+                                style: { backgroundColor: "#c1121f", color: "white" },
+                                duration:1500
+                            }
+                        )
+                        console.log("Error while adding new admin!!", error)
+                    }
+                }
 
     const columns: ColumnDef<Admin>[] = [
 
@@ -223,8 +265,6 @@ export default function Page() {
                     const { name, value } = e.target
                     setFormData(prev => ({ ...prev, [name]: value }));
 
-
-
                 }
                 const handleUpdate = async (id: number) => {
                     console.log("clicked" + id)
@@ -258,48 +298,7 @@ export default function Page() {
                 };
 
 
-                const [adminForm, setAdminForm] = useState({ name: "", email: "", password: "" })
-                const handleAddChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                    e.preventDefault()
-                    const { name, value } = e.target
-                    setAdminForm((prev) => ({ ...prev, [name]: value }))
-                }
-
-                const handleAdd = async () => {
-                    try {
-                        const response = await axios.post("/api/superAdmin/admins"
-                            , {
-                                name: adminForm.name,
-                                email: adminForm.email,
-                                password: adminForm.password
-                            }
-                            , { withCredentials: true })
-                        const new_admin = response.data
-                        setAdmins((prev) => [...prev, new_admin])
-
-                        if(response.status==201){
-                            toast.success("Successfully Added New Admin",
-                                {
-                                style: {
-                                    "backgroundColor": "#D5F5E3",
-                                    "color": "black",
-                                    "border": "none"
-                                },
-                                duration: 1500
-                            })
-                            
-                        }
-
-                    } catch (error) {
-                        toast.error("Failed to add new admin!!",
-                            {
-                                style: { backgroundColor: "#c1121f", color: "white" },
-                                duration:1500
-                            }
-                        )
-                        console.log("Error while adding new admin!!", error)
-                    }
-                }
+                
 
 
 
@@ -408,50 +407,7 @@ export default function Page() {
                             </DialogContent>
                         </Dialog>
 
-                        <Dialog open={add} onOpenChange={setAdd}>
-                            <DialogContent>
-                                <form onSubmit={handleAdd}>
-                                    <DialogTrigger asChild>
-                                    </DialogTrigger>
-                                    <DialogHeader>
-                                        <DialogTitle>Add New Admin</DialogTitle>
-                                        <DialogDescription className="mb-3">
-                                            Create new admin. Click create when you&apos;re
-                                            done.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4">
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="name-1">Name</Label>
-                                            <input value={adminForm.name} name="name"
-                                                onChange={handleAddChange}
-
-                                            />
-                                        </div>
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="username-1">Email</Label>
-                                            <input
-                                                value={adminForm.email} name="email"
-                                                onChange={handleAddChange}
-                                            />
-                                        </div>
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="username-1">Password</Label>
-                                            <input
-                                                value={adminForm.password} name="password"
-                                                onChange={handleAddChange}
-                                            />
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button variant="outline">Cancel</Button>
-                                        </DialogClose>
-                                        <Button type="submit">Create</Button>
-                                    </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                        
                     </main>
                 )
 
@@ -535,6 +491,50 @@ export default function Page() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Button variant={'success'} onClick={() => setAdd(true)}>Add Admin</Button>
+                        <Dialog open={add} onOpenChange={setAdd}>
+                            <DialogContent>
+                                <form onSubmit={handleAdd}>
+                                    <DialogTrigger asChild>
+                                    </DialogTrigger>
+                                    <DialogHeader>
+                                        <DialogTitle>Add New Admin</DialogTitle>
+                                        <DialogDescription className="mb-3">
+                                            Create new admin. Click create when you&apos;re
+                                            done.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4">
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="name-1">Name</Label>
+                                            <input value={adminForm.name} name="name"
+                                                onChange={handleAddChange}
+
+                                            />
+                                        </div>
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="username-1">Email</Label>
+                                            <input
+                                                value={adminForm.email} name="email"
+                                                onChange={handleAddChange}
+                                            />
+                                        </div>
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="username-1">Password</Label>
+                                            <input
+                                                value={adminForm.password} name="password"
+                                                onChange={handleAddChange}
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button variant="outline">Cancel</Button>
+                                        </DialogClose>
+                                        <Button type="submit">Create</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
                 <div className=" w-full rounded-md border">

@@ -76,7 +76,7 @@ import { Technician } from "@prisma/client";
 import e from "cors";
 
 export default function Page() {
-    const [technicians, settechnicians] = useState<Technician[]>([]);
+    const [technicians, setTechnicians] = useState<Technician[]>([]);
     const [loading, setLoading] = useState(true);
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
@@ -92,10 +92,10 @@ export default function Page() {
     const [deleted, setDeleted] = useState(false);
     const [updated, setUpdated] = useState(false);
 
-    const [openEdit, setOpenEdit] = useState(false)
     const [techIdToDelete, setTechIdToDelete] = useState<number | null>(null);
     const [techIdToUpdate, setTechIdToUpdate] = useState<number | null>(null);
 
+    const [add, setAdd] = useState(false)
 
     useEffect(() => {
         const getData = async () => {
@@ -104,7 +104,7 @@ export default function Page() {
 
                 if (response_technician.status === 200) {
                     console.log("Get technicians")
-                    settechnicians(response_technician.data);
+                    setTechnicians(response_technician.data);
                 }
             } catch (err) {
                 console.error("Error fetching technicians:", err);
@@ -115,6 +115,50 @@ export default function Page() {
 
         getData();
     }, []);
+
+    const [techForm, setTechForm] = useState({ name: "", email: "", password: "" })
+    const handleAddChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.preventDefault()
+        const { name, value } = e.target
+        setTechForm((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const handleAdd = async () => {
+        try {
+            const response = await axios.post("/api/superAdmin/Technicians"
+                , {
+                    name: techForm.name,
+                    email: techForm.email,
+                    password: techForm.password
+                }
+                , { withCredentials: true })
+            const new_admin = response.data
+            setTechnicians((prev) => [...prev, new_admin])
+
+            if (response.status == 201) {
+                toast.success("Successfully Added New Admin",
+                    {
+                        style: {
+                            "backgroundColor": "#D5F5E3",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 1500
+                    })
+
+            }
+
+        } catch (error) {
+            toast.error("Failed to add new admin!!",
+                {
+                    style: { backgroundColor: "#c1121f", color: "white" },
+                    duration: 1500
+                }
+            )
+            console.log("Error while adding new admin!!", error)
+        }
+    }
+
     const columns: ColumnDef<Technician>[] = [
 
         {
@@ -218,7 +262,7 @@ export default function Page() {
                                 duration: 1500
                             });
                             setDeleted(false);
-                            settechnicians(prev => prev.filter(technician => technician.id !== id));
+                            setTechnicians(prev => prev.filter(technician => technician.id !== id));
                         }
 
                     } catch (error) {
@@ -388,12 +432,15 @@ export default function Page() {
                                 </form>
                             </DialogContent>
                         </Dialog>
+
                     </main>
                 )
 
             },
         },
     ];
+
+    
 
     const table = useReactTable({
         data: technicians,
@@ -441,6 +488,7 @@ export default function Page() {
                                     <SlidersHorizontal /> View
                                 </Button>
                             </DropdownMenuTrigger>
+
                             <DropdownMenuContent align="end">
                                 {table
                                     .getAllColumns()
@@ -470,6 +518,51 @@ export default function Page() {
                                     })}
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        <Button variant={'success'} onClick={() => setAdd(true)}>Add Technician</Button>
+                        <Dialog open={add} onOpenChange={setAdd}>
+        <DialogContent>
+            <form onSubmit={handleAdd}>
+                <DialogTrigger asChild>
+                </DialogTrigger>
+                <DialogHeader>
+                    <DialogTitle>Add New Technician</DialogTitle>
+                    <DialogDescription className="mb-3">
+                        Create a new Technician. Click create when you&apos;re
+                        done.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4">
+                    <div className="grid gap-3">
+                        <Label htmlFor="name-1">Name</Label>
+                        <input value={techForm.name} name="name"
+                            onChange={handleAddChange}
+
+                        />
+                    </div>
+                    <div className="grid gap-3">
+                        <Label htmlFor="username-1">Email</Label>
+                        <input
+                            value={techForm.email} name="email"
+                            onChange={handleAddChange}
+                        />
+                    </div>
+                    <div className="grid gap-3">
+                        <Label htmlFor="username-1">Password</Label>
+                        <input
+                            value={techForm.password} name="password"
+                            onChange={handleAddChange}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="submit">Create</Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>               
                     </div>
                 </div>
                 <div className=" w-full rounded-md border">
