@@ -9,22 +9,13 @@ export async function POST(req:Request){
         
         const body = await req.json();
 
-        const {superAdminEmail,
-            superAdminPassword,
-            name,
+        const {name,
             email,
     password} = body as{
-        
-      superAdminEmail?:string,
-      superAdminPassword?:string,
       name?:string,
       email?:string,
       password?:string  
     } 
-
-    if(!superAdminEmail || !superAdminPassword){
-        return NextResponse.json({error:"Invalid admin credentials!!"}, {status:401})
-    }
 
     if(!name || !email || !password){
         return NextResponse.json({error:"Missing details of technician!!"}, {status:401})
@@ -33,27 +24,6 @@ export async function POST(req:Request){
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRe.test(email)) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be >= 6 chars" }, { status: 400 });
-    }
-
-    const superAdmin = await prisma.superadmin.findUnique(
-        {
-            where:{email:superAdminEmail}
-        }
-    )
-    if(!superAdmin){
-        return NextResponse.json({error:`No super-admin is present with email ${superAdminEmail}`},
-            {status:400}
-        )
-    }
-    const ok = await bcrypt.compare(superAdminPassword,superAdmin.password);
-    if(!ok){
-        return NextResponse.json({error:"Wrong super-admin credentials!!"},
-            {status:400}
-        )
     }
 
     const hashedPass = await bcrypt.hash(password, 10);
@@ -70,7 +40,7 @@ export async function POST(req:Request){
 
 
 } catch (err:any) {
-    console.error("Create admin error:", err);
+    console.error("Create technician error:", err);
 
     // handle unique constraint (duplicate email)
     if (err?.code === "P2002") {
