@@ -440,7 +440,7 @@ export default function Page() {
         },
     ];
 
-    
+
 
     const table = useReactTable({
         data: technicians,
@@ -520,49 +520,49 @@ export default function Page() {
                         </DropdownMenu>
                         <Button variant={'success'} onClick={() => setAdd(true)}>Add Technician</Button>
                         <Dialog open={add} onOpenChange={setAdd}>
-        <DialogContent>
-            <form onSubmit={handleAdd}>
-                <DialogTrigger asChild>
-                </DialogTrigger>
-                <DialogHeader>
-                    <DialogTitle>Add New Technician</DialogTitle>
-                    <DialogDescription className="mb-3">
-                        Create a new Technician. Click create when you&apos;re
-                        done.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4">
-                    <div className="grid gap-3">
-                        <Label htmlFor="name-1">Name</Label>
-                        <input value={techForm.name} name="name"
-                            onChange={handleAddChange}
+                            <DialogContent>
+                                <form onSubmit={handleAdd}>
+                                    <DialogTrigger asChild>
+                                    </DialogTrigger>
+                                    <DialogHeader>
+                                        <DialogTitle>Add New Technician</DialogTitle>
+                                        <DialogDescription className="mb-3">
+                                            Create a new Technician. Click create when you&apos;re
+                                            done.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4">
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="name-1">Name</Label>
+                                            <input value={techForm.name} name="name"
+                                                onChange={handleAddChange}
 
-                        />
-                    </div>
-                    <div className="grid gap-3">
-                        <Label htmlFor="username-1">Email</Label>
-                        <input
-                            value={techForm.email} name="email"
-                            onChange={handleAddChange}
-                        />
-                    </div>
-                    <div className="grid gap-3">
-                        <Label htmlFor="username-1">Password</Label>
-                        <input
-                            value={techForm.password} name="password"
-                            onChange={handleAddChange}
-                        />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button type="submit">Create</Button>
-                </DialogFooter>
-            </form>
-        </DialogContent>
-    </Dialog>               
+                                            />
+                                        </div>
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="username-1">Email</Label>
+                                            <input
+                                                value={techForm.email} name="email"
+                                                onChange={handleAddChange}
+                                            />
+                                        </div>
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="username-1">Password</Label>
+                                            <input
+                                                value={techForm.password} name="password"
+                                                onChange={handleAddChange}
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button variant="outline">Cancel</Button>
+                                        </DialogClose>
+                                        <Button type="submit">Create</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
                 <div className=" w-full rounded-md border">
