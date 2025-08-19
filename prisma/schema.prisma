@@ -68,8 +68,8 @@ model Superadmin  {
   role      String @default("Superadmin")
 }
 
-enum Role{
-  
+enum Role {
+  USER
   ADMIN
   TECHNICIAN
   SUPERADMIN

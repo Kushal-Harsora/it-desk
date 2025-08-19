@@ -20,14 +20,13 @@ import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format, toZonedTime } from 'date-fns-tz'
 import axios, { AxiosResponse } from "axios"
+import { toast } from "sonner"
 
 
 // Component imports
 import {
     Dialog,
-    DialogClose,
     DialogContent,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -35,9 +34,7 @@ import {
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
@@ -73,9 +70,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
-import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { ChartArea } from "@/components/custom/Chart-Area"
 
@@ -87,12 +82,8 @@ import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 import { Ticket } from "@/const/constVal"
 
 
-// Form Schemas
-const StatusSchema = z.object({
-    status: z.string(),
-    ticketId: z.number()
-})
 
+// Form Schemas
 const CalendarSchema = z.object({
     dateRange: z.object({
         from: z.date({
@@ -107,14 +98,6 @@ const CalendarSchema = z.object({
 
 export default function Page() {
 
-
-    const statusForm = useForm<z.infer<typeof StatusSchema>>({
-        resolver: zodResolver(StatusSchema),
-        defaultValues: {
-            status: ""
-        }
-    })
-
     const formCalendar = useForm({
         resolver: zodResolver(CalendarSchema),
         defaultValues: {
@@ -124,8 +107,6 @@ export default function Page() {
             },
         },
     });
-
-    const dialogCloseButton = React.useRef<HTMLButtonElement | null>(null);
 
     const [openCalendar, setOpenCalendar] = React.useState(false);
     const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
@@ -303,39 +284,14 @@ export default function Page() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem
-                                onClick={() => navigator.clipboard.writeText(title)}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(title);
+                                    toast.info("Ticket Title copied to Clipboard!");
+                                }}
                             >
                                 Copy Ticket Name
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button className="w-full" variant="ghost">Toggle Status</Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Toggle Status</DialogTitle>
-                                    </DialogHeader>
-                                    
-                                    <DialogClose asChild>
-                                        <Button className="hidden" ref={dialogCloseButton}></Button>
-                                    </DialogClose>
-                                </DialogContent>
-                            </Dialog>
-                            <DropdownMenuSeparator />
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button className="w-full" variant="ghost">Add/Edit Comment</Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Add/Edit Comment</DialogTitle>
-                                    </DialogHeader>
-                                    <DialogClose asChild>
-                                        <Button className="hidden" ref={dialogCloseButton}></Button>
-                                    </DialogClose>
-                                </DialogContent>
-                            </Dialog>
                             <DropdownMenuSeparator />
                             <Dialog >
                                 <DialogTrigger asChild>
@@ -601,101 +557,6 @@ export default function Page() {
                                 </Form>
                             </DialogContent>
                         </Dialog>
-
-                        {/* <Dialog open={openTicket} onOpenChange={setOpenTicket}>
-                            <DialogTrigger className="mr-auto cursor-pointer w-fit" asChild>
-                                <Button className=" max-md:text-xs" variant={'default'}>Create Ticket</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-sm:max-w-4/5 w-full">
-                                <DialogHeader>
-                                    <DialogTitle>Ticket</DialogTitle>
-                                    <DialogDescription>
-                                        Enter the ticket details here. Click save when you&apos;re done.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <Form {...form}>
-                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="title"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Ticket Title</FormLabel>
-                                                    <FormControl>
-                                                        <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="description"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Ticket Description</FormLabel>
-                                                    <FormControl>
-                                                        <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="attachProof"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Attach PDF/Image</FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            accept=".pdf, image/*"
-                                                            type="file"
-                                                            onChange={e => {
-                                                                const file = e.target.files?.[0];
-                                                                field.onChange(file);
-                                                            }}
-                                                            onBlur={field.onBlur}
-                                                            name={field.name}
-                                                            ref={field.ref}
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="priority"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Priority</FormLabel>
-                                                    <FormControl>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <SelectTrigger className="w-full">
-                                                                <SelectValue placeholder="Select ticket priority" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectGroup>
-                                                                    <SelectLabel>Ticket Priority</SelectLabel>
-                                                                    <SelectItem value="HIGH">High</SelectItem>
-                                                                    <SelectItem value="MEDIUM">Medium</SelectItem>
-                                                                    <SelectItem value="LOW">Low</SelectItem>
-                                                                </SelectGroup>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <DialogFooter>
-                                            <Button type="submit">Create Ticket</Button>
-                                        </DialogFooter>
-                                    </form>
-                                </Form>
-                            </DialogContent>
-                        </Dialog> */}
                     </div>
                 </div>
                 <div className=" w-full rounded-md border">

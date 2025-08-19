@@ -19,8 +19,6 @@ import { useRouter } from "next/navigation"
 import axios, { AxiosResponse } from "axios";
 import React from "react";
 import Link from "next/link";
-import { title } from "process";
-import { ur } from "zod/v4/locales";
 
 // Menu items.
 const items = [
