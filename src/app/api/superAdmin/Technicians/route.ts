@@ -66,7 +66,7 @@ export async function POST(req:Request){
     const { password: _p, ...safeTechnician } = technician as any;
 
     
-    return NextResponse.json({ admin: safeTechnician }, { status: 201 });
+    return NextResponse.json({ technician: safeTechnician }, { status: 201 });
 
 
 } catch (err:any) {
@@ -82,10 +82,12 @@ export async function POST(req:Request){
 }
 
 export async function GET(req:Request) {
+        let where: any = {};
 
     try {
         const technicians = await prisma.technician.findMany({
-            select:{id:true,name:true, email:true}
+            where,
+            orderBy: { createdAt: "desc" },
         })
         if(!technicians){
             return NextResponse.json({error:"No technicians are present!!"},{status:401})

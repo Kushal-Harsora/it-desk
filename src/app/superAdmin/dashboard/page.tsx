@@ -444,13 +444,13 @@ export default function Page() {
                 console.log(response_ticket.data.tickets);
             }
 
-            // const response_chart: AxiosResponse = await axios.get('api/chart');
-            // if (response_chart.status === 200) {
-            //     setStatus(response_chart.data.status);
-            //     setPriority(response_chart.data.priority);
-            // }
+            const response_chart: AxiosResponse = await axios.get('/api/superAdmin/chart');
+            if (response_chart.status === 200) {
+                setStatus(response_chart.data.status);
+                setPriority(response_chart.data.priority);
+            }
 
-            if (response_ticket.status === 200) {
+            if (response_chart.status === 200 && response_ticket.status === 200) {
                 setLoading(false);
             }
         }

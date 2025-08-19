@@ -59,18 +59,28 @@ export async function PUT(req:Request, context:{params:Promise<{id:string}>}) {
 
 }
 
-export async function DELETE(req:Request, context:{params:Promise<{id:string}>}) {
-    const {id} = await context.params
+export async function DELETE(
+  req: Request,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params; // directly destructure without await
 
-    try {
-        const admins = await prisma.admin.delete({
-            where:{id:parseInt(id)},
-        })
-        
-        return NextResponse.json({message:"Admin deleted successfully 🍾"}, {status:200})
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
+  console.log(typeof id, id); // should log "string" and correct id
 
+  try {
+    const deletedAdmin = await prisma.admin.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return NextResponse.json(
+      { message: "Admin deleted successfully 🍾", deletedAdmin },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Delete admin error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }
