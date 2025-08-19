@@ -25,8 +25,8 @@ import axios, { AxiosResponse } from "axios"
 // Component imports
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
+    DialogContent,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -78,26 +78,16 @@ import { Calendar } from "@/components/ui/calendar"
 import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { ChartArea } from "@/components/custom/Chart-Area"
-// import { Checkbox } from "@/components/ui/checkbox"
 
 // Icon, Style and consts imports
 import { ArrowUpDown, CalendarIcon, MoreHorizontal, SlidersHorizontal } from "lucide-react"
 import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
 // Ticket Type Definition
-export type Ticket = {
-    id: string
-    title: string
-    priority: string,
-    status: Status,
-    ticket: string,
-    description: string,
-    createdAt: Date,
-    attachment: string,
-    attachmentUrl: string
-}
+import { Ticket } from "@/const/constVal"
 
-// Create Ticket Form Schema
+
+// Form Schemas
 const TicketSchema = z.object({
     title: z.string().min(1, {
         message: "Ticket title is required"
@@ -120,269 +110,6 @@ const CalendarSchema = z.object({
     }),
 })
 
-const columns: ColumnDef<Ticket>[] = [
-    {
-        accessorKey: "status",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-left"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Status
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => {
-            const status: string = row.getValue("status");
-            return (
-                <div className={cn(`text-left font-semibold`, {
-                    'text-red-500': status === 'OPEN',
-                    'text-yellow-500': status === 'IN_PROGRESS',
-                    'text-green-500': status === 'RESOLVED',
-                    'text-blue-500': status === 'CLOSED',
-                })}>
-                    {status}
-                </div>
-            )
-        },
-        sortingFn: (rowA, rowB, columnId) => {
-            const statusOrder = {
-                'OPEN': 1,
-                'IN_PROGRESS': 2,
-                'RESOLVED': 3,
-                'CLOSED': 4,
-            };
-
-            const a = rowA.getValue(columnId) as keyof typeof statusOrder;
-            const b = rowB.getValue(columnId) as keyof typeof statusOrder;
-
-            return statusOrder[a] - statusOrder[b];
-        }
-    },
-    {
-        accessorKey: "title",
-        header: () => <div className="text-left">Ticket</div>,
-        cell: ({ row }) => <div>{row.getValue("title")}</div>,
-    },
-    {
-        accessorKey: "description",
-        header: () => <div className="text-left">Description</div>,
-        cell: ({ row }) => <div>{row.getValue("description")}</div>,
-    },
-    {
-        accessorKey: "priority",
-        header: ({ column }) => {
-            return (
-                <Button
-                    className="w-fit text-left"
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Priority
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => {
-            const priority: string = row.getValue("priority");
-            return <div className={cn(`text-left font-medium`, {
-                'text-red-500': priority === 'HIGH',
-                'text-yellow-500': priority === 'MEDIUM',
-                'text-green-500': priority === 'LOW',
-            })}>{priority}</div>
-        },
-        sortingFn: (rowA, rowB, columnId) => {
-            const priorityOrder = {
-                'HIGH': 1,
-                'MEDIUM': 2,
-                'LOW': 3,
-            };
-
-            const a = rowA.getValue(columnId) as keyof typeof priorityOrder;
-            const b = rowB.getValue(columnId) as keyof typeof priorityOrder;
-
-            return priorityOrder[a] - priorityOrder[b];
-        }
-    },
-    {
-        accessorKey: "createdAt",
-        header: ({ column }) => {
-            return (
-                <div className="w-fit">
-                    <Button
-                        className="w-fit text-center"
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Date of Creation
-                        <ArrowUpDown />
-                    </Button>
-                </div>
-            )
-        },
-        cell: ({ row }) => {
-            const createdAt: Date = row.getValue("createdAt");
-            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
-            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
-            return <div className='font-medium text-center'>{formattedDate}</div>
-        },
-    },
-    {
-        accessorKey: "updatedAt",
-        header: ({ column }) => {
-            return (
-                <div className="w-fit">
-                    <Button
-                        className="w-fit text-center"
-                        variant="ghost"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    >
-                        Last Updated
-                        <ArrowUpDown />
-                    </Button>
-                </div>
-            )
-        },
-        cell: ({ row }) => {
-            const createdAt: Date = row.getValue("updatedAt");
-            const dateCreated = toZonedTime(new Date(createdAt), timeZone);
-            const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
-            return <div className='font-medium text-center'>{formattedDate}</div>
-        },
-    },
-    {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-            const title = row.original.title
-            const row_data = row.original;
-            const createdAt = new Date(row_data.createdAt);
-
-            const formattedDate = new Intl.DateTimeFormat('en-IN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                timeZone: 'Asia/Kolkata',
-            }).format(createdAt);
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant={'ghost'} className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(title)}
-                        >
-                            Copy Ticket Name
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button className=" w-full" variant={'ghost'}>
-                                    View Details
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle className=" text-center">
-                                        Ticket Details for <span className=" font-bold text-blue-500">{row_data.title}</span>
-                                    </DialogTitle>
-                                </DialogHeader>
-                                <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
-                                    <div className=" w-full h-fit flex flex-row max-md:flex-col justify-evenly items-center">
-                                        <div className=" flex flex-row gap-1 justify-center items-center">
-                                            <span className=" font-medium">Status: </span>
-                                            <div className={cn(`text-left font-medium`, {
-                                                'text-red-500': row_data.status === 'OPEN',
-                                                'text-yellow-500': row_data.status === 'IN_PROGRESS',
-                                                'text-green-500': row_data.status === 'RESOLVED',
-                                                'text-blue-500': row_data.status === 'CLOSED',
-                                            })}>{row_data.status}</div>
-                                        </div>
-                                        <div className=" flex flex-row gap-1 justify-center items-center">
-                                            <span className=" font-medium">Priority: </span>
-                                            <div className={cn(`text-left font-medium`, {
-                                                'text-red-500': row_data.priority === 'HIGH',
-                                                'text-yellow-500': row_data.priority === 'MEDIUM',
-                                                'text-green-500': row_data.priority === 'LOW',
-                                            })}>{row_data.priority}</div>
-                                        </div>
-                                        <div className=" flex flex-row gap-1 justify-center items-center">
-                                            <span className=" font-medium">Date: </span>
-                                            <div className="text-left font-medium">{formattedDate}</div>
-                                        </div>
-                                    </div>
-                                    <div className=" flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Description: </span>
-                                        <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
-                                            {row_data.description}
-                                        </div>
-                                    </div>
-                                    {row_data?.attachment && row_data?.id && (
-                                        <div className="flex flex-col justify-center items-center gap-2">
-                                            <span className="font-medium">Attachment:</span>
-                                            <a
-                                                href={`/api/tickets/${row_data.id}/attachment`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <Button>View Attachment</Button>
-                                            </a>
-
-                                        </div>
-                                    )}
-
-
-                                    {(row_data.comments.length > 0) ? (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
-                                        <span className=" font-medium">Commnets: </span>
-                                        {row_data.comments.map((comment_data, index) => (
-                                            <div key={index} className="bg-gray-100 p-2 rounded-lg w-full h-fit max-h-[200px] overflow-auto text-wrap">
-                                                {comment_data.message}
-                                            </div>
-                                        ))}
-                                    </div>) :
-                                        (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
-                                            <span className=" font-medium">Commnets: </span>
-                                            <div className="text-center w-full h-fit overflow-auto text-wrap">
-                                                No Comment Found
-                                            </div>
-                                        </div>)}
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )
-        },
-    },
-]
-import { useEffect, useState } from 'react';
-
-
-const handleView = async (ticketId: string) => {
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    try {
-        const response = await fetch(`/api/tickets/${ticketId}/attachment`);
-
-        // This handles the redirect manually
-        if (response.redirected) {
-            setImageUrl(response.url);
-        } else {
-            console.error('Failed to get image URL');
-        }
-    } catch (error) {
-        console.error('Error fetching attachment:', error);
-    }
-};
-
 
 export default function Page() {
 
@@ -396,8 +123,22 @@ export default function Page() {
         },
     });
 
-    const [open, setOpen] = React.useState(false);
-    const [TicketData, setFilteredTickets] = React.useState<Ticket[]>([]);
+    const formCalendar = useForm({
+        resolver: zodResolver(CalendarSchema),
+        defaultValues: {
+            dateRange: {
+                from: toZonedTime(new Date(), timeZone),
+                to: toZonedTime(new Date(), timeZone),
+            },
+        },
+    });
+
+    const [open, setOpen] = React.useState<boolean>(false);
+    const [openCalendar, setOpenCalendar] = React.useState(false);
+    const [TicketData, setTicketData] = React.useState<Ticket[]>([]);
+    const [loading, setLoading] = React.useState<boolean>(true);
+    const [status, setStatus] = React.useState<StatusGrouped[]>([]);
+    const [priority, setPriority] = React.useState<PriorityGrouped[]>([]);
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
@@ -410,8 +151,250 @@ export default function Page() {
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
 
+    const columns: ColumnDef<Ticket>[] = [
+        {
+            accessorKey: "status",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-left"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Status
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => {
+                const status: string = row.getValue("status");
+                return (
+                    <div className={cn(`text-left font-semibold`, {
+                        'text-red-500': status === 'OPEN',
+                        'text-yellow-500': status === 'IN_PROGRESS',
+                        'text-green-500': status === 'RESOLVED',
+                        'text-blue-500': status === 'CLOSED',
+                    })}>
+                        {status}
+                    </div>
+                )
+            },
+            sortingFn: (rowA, rowB, columnId) => {
+                const statusOrder = {
+                    'OPEN': 1,
+                    'IN_PROGRESS': 2,
+                    'RESOLVED': 3,
+                    'CLOSED': 4,
+                };
+
+                const a = rowA.getValue(columnId) as keyof typeof statusOrder;
+                const b = rowB.getValue(columnId) as keyof typeof statusOrder;
+
+                return statusOrder[a] - statusOrder[b];
+            }
+        },
+        {
+            accessorKey: "title",
+            header: () => <div className="text-left">Ticket</div>,
+            cell: ({ row }) => <div>{row.getValue("title")}</div>,
+        },
+        {
+            accessorKey: "description",
+            header: () => <div className="text-left">Description</div>,
+            cell: ({ row }) => <div>{row.getValue("description")}</div>,
+        },
+        {
+            accessorKey: "priority",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        className="w-fit text-left"
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Priority
+                        <ArrowUpDown />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => {
+                const priority: string = row.getValue("priority");
+                return <div className={cn(`text-left font-medium`, {
+                    'text-red-500': priority === 'HIGH',
+                    'text-yellow-500': priority === 'MEDIUM',
+                    'text-green-500': priority === 'LOW',
+                })}>{priority}</div>
+            },
+            sortingFn: (rowA, rowB, columnId) => {
+                const priorityOrder = {
+                    'HIGH': 1,
+                    'MEDIUM': 2,
+                    'LOW': 3,
+                };
+
+                const a = rowA.getValue(columnId) as keyof typeof priorityOrder;
+                const b = rowB.getValue(columnId) as keyof typeof priorityOrder;
+
+                return priorityOrder[a] - priorityOrder[b];
+            }
+        },
+        {
+            accessorKey: "createdAt",
+            header: ({ column }) => {
+                return (
+                    <div className="w-fit">
+                        <Button
+                            className="w-fit text-center"
+                            variant="ghost"
+                            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        >
+                            Date of Creation
+                            <ArrowUpDown />
+                        </Button>
+                    </div>
+                )
+            },
+            cell: ({ row }) => {
+                const createdAt: Date = row.getValue("createdAt");
+                const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+                const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+                return <div className='font-medium text-center'>{formattedDate}</div>
+            },
+        },
+        {
+            accessorKey: "updatedAt",
+            header: ({ column }) => {
+                return (
+                    <div className="w-fit">
+                        <Button
+                            className="w-fit text-center"
+                            variant="ghost"
+                            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        >
+                            Last Updated
+                            <ArrowUpDown />
+                        </Button>
+                    </div>
+                )
+            },
+            cell: ({ row }) => {
+                const createdAt: Date = row.getValue("updatedAt");
+                const dateCreated = toZonedTime(new Date(createdAt), timeZone);
+                const formattedDate = format(dateCreated, 'yyyy-MM-dd', { timeZone });
+                return <div className='font-medium text-center'>{formattedDate}</div>
+            },
+        },
+        {
+            id: "actions",
+            enableHiding: false,
+            cell: ({ row }) => {
+                const title = row.original.title
+                const row_data = row.original;
+                const createdAt = new Date(row_data.createdAt);
+
+                const formattedDate = new Intl.DateTimeFormat('en-IN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    timeZone: 'Asia/Kolkata',
+                }).format(createdAt);
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant={'ghost'} className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => navigator.clipboard.writeText(title)}
+                            >
+                                Copy Ticket Name
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className=" w-full" variant={'ghost'}>
+                                        View Details
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle className=" text-center">
+                                            Ticket Details for <span className=" font-bold text-blue-500">{row_data.title}</span>
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    <div className=" w-full h-fit flex flex-col justify-center items-center gap-2">
+                                        <div className=" w-full h-fit flex flex-row max-md:flex-col justify-evenly items-center">
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Status: </span>
+                                                <div className={cn(`text-left font-medium`, {
+                                                    'text-red-500': row_data.status === 'OPEN',
+                                                    'text-yellow-500': row_data.status === 'IN_PROGRESS',
+                                                    'text-green-500': row_data.status === 'RESOLVED',
+                                                    'text-blue-500': row_data.status === 'CLOSED',
+                                                })}>{row_data.status}</div>
+                                            </div>
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Priority: </span>
+                                                <div className={cn(`text-left font-medium`, {
+                                                    'text-red-500': row_data.priority === 'HIGH',
+                                                    'text-yellow-500': row_data.priority === 'MEDIUM',
+                                                    'text-green-500': row_data.priority === 'LOW',
+                                                })}>{row_data.priority}</div>
+                                            </div>
+                                            <div className=" flex flex-row gap-1 justify-center items-center">
+                                                <span className=" font-medium">Date: </span>
+                                                <div className="text-left font-medium">{formattedDate}</div>
+                                            </div>
+                                        </div>
+                                        <div className=" flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Description: </span>
+                                            <div className=" w-full h-fit max-h-[100px] overflow-auto text-wrap">
+                                                {row_data.description}
+                                            </div>
+                                        </div>
+                                        {row_data?.attachment && row_data?.id && (
+                                            <div className="flex flex-col justify-center items-center gap-2">
+                                                <span className="font-medium">Attachment:</span>
+                                                <a
+                                                    href={`/api/tickets/${row_data.id}/attachment`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Button>View Attachment</Button>
+                                                </a>
+
+                                            </div>
+                                        )}
 
 
+                                        {(row_data.comments.length > 0) ? (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                            <span className=" font-medium">Commnets: </span>
+                                            {row_data.comments.map((comment_data, index) => (
+                                                <div key={index} className="bg-gray-100 p-2 rounded-lg w-full h-fit max-h-[200px] overflow-auto text-wrap">
+                                                    {comment_data.message}
+                                                </div>
+                                            ))}
+                                        </div>) :
+                                            (<div className="w-full h-fit max-h-[40vh] overflow-auto flex flex-col justify-center items-center gap-2">
+                                                <span className=" font-medium">Commnets: </span>
+                                                <div className="text-center w-full h-fit overflow-auto text-wrap">
+                                                    No Comment Found
+                                                </div>
+                                            </div>)}
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )
+            },
+        },
+    ];
 
     const table = useReactTable({
         data: TicketData,
@@ -434,7 +417,6 @@ export default function Page() {
         },
     });
 
-    // Get the Ticket Data
     React.useEffect(() => {
         const getData = async () => {
 
@@ -497,12 +479,17 @@ export default function Page() {
 
     const onSubmit = async (values: z.infer<typeof TicketSchema>) => {
 
-        const formData = new FormData();
+        const name = window.localStorage.getItem("name") as string;
+        const email = window.localStorage.getItem("email") as string;
 
+        const formData = new FormData();
 
         formData.append("title", values.title)
         formData.append("description", values.description);
         formData.append("priority", values.priority.toLowerCase());
+        formData.append("name", name);
+        formData.append("email", email);
+
         if (values.attachment != undefined)
             formData.append("attachment", values.attachment);
         try {
@@ -524,7 +511,7 @@ export default function Page() {
                     },
                     duration: 1500
                 });
-                setOpenTicket(false);
+                setOpen(false);
                 window.location.reload();
             }
         } catch (error) {
@@ -610,57 +597,144 @@ export default function Page() {
         <main className="flex-1 h-fit items-center justify-center max-md:px-[3.5vw]">
             <ChartArea priority={priority} status={status} />
             <div className="w-full h-full px-[2.5vw] flex flex-col items-center justify-center gap-2">
-                <div className="w-full flex justify-evenly items-center gap-2 py-4">
-                    <Input
-                        placeholder="Filter tickets..."
-                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn("title")?.setFilterValue(event.target.value)
-                        }
-                        className="max-w-sm"
-                    />
+                <div className="h-fit w-full flex max-md:flex-col justify-evenly items-center gap-2 py-4">
+                    <div className="w-full max-md:w-fit flex max-md:flex-row justify-between items-center gap-2.5">
+                        <Input
+                            placeholder="Filter tickets..."
+                            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+                            onChange={(event) =>
+                                table.getColumn("title")?.setFilterValue(event.target.value)
+                            }
+                            className="w-full max-w-md"
+                        />
 
+                        <span className="max-md:text-xs text-center px-6 max-md:px-0 w-full">
+                            Total Tickets - <strong>{TicketData.length}</strong>
+                        </span>
+                    </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
-                                Columns <ChevronDown />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => {
-                                    return (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            className="capitalize"
-                                            checked={column.getIsVisible()}
-                                            onCheckedChange={(value) =>
-                                                column.toggleVisibility(!!value)
-                                            }
-                                        >
-                                            {column.id}
-                                        </DropdownMenuCheckboxItem>
-                                    )
-                                })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant={'default'}>Create Ticket</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-sm:max-w-4/5 w-full">
-                            <DialogHeader>
-                                <DialogTitle>Ticket</DialogTitle>
-                                <DialogDescription>
-                                    Enter the ticket details here. Click save when you&apos;re done.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                    <FormField
+                    <div className=" w-fit h-fit flex flex-row justify-evenly items-center gap-3">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="ml-auto max-md:text-xs">
+                                    <SlidersHorizontal /> View
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => {
+                                        return (
+                                            <DropdownMenuCheckboxItem
+                                                key={column.id}
+                                                className="capitalize"
+                                                checked={column.getIsVisible()}
+                                                onCheckedChange={(value) =>
+                                                    column.toggleVisibility(!!value)
+                                                }
+                                            >
+                                                {(() => {
+                                                    switch (column.id) {
+                                                        case "createdAt":
+                                                            return "Date of Creation";
+                                                        case "updatedAt":
+                                                            return "Last Updated";
+                                                        default:
+                                                            return column.id;
+                                                    }
+                                                })()}
+                                            </DropdownMenuCheckboxItem>
+                                        )
+                                    })}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Dialog open={openCalendar} onOpenChange={setOpenCalendar}>
+                            <DialogTrigger className="mr-auto cursor-pointer w-fit" asChild>
+                                <Button variant="outline" className="ml-auto max-md:text-xs">
+                                    Filter
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className=" w-full h-fit flex flex-col justify-center items-center">
+                                <DialogHeader>
+                                    <DialogTitle className=" text-center">
+                                        Filter Out the Dates of Tickets
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <Form {...formCalendar}>
+                                    <form onSubmit={formCalendar.handleSubmit(onSubmitCalendar)} className="space-y-8">
+                                        <FormField
+                                            control={formCalendar.control}
+                                            name="dateRange"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-col w-full h-full">
+                                                    <FormLabel className=" text-center">Select the Range of Date</FormLabel>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <FormControl>
+                                                                <Button
+                                                                    variant={"outline"}
+                                                                    className={cn(
+                                                                        "w-[270px] pl-3 text-left font-normal",
+                                                                        !field.value?.from && "text-muted-foreground"
+                                                                    )}
+                                                                >
+                                                                    {field.value?.from ? (
+                                                                        field.value.to ? (
+                                                                            <>
+                                                                                {format(field.value.from, "PPP")} – {format(field.value.to, "PPP")}
+                                                                            </>
+                                                                        ) : (
+                                                                            format(field.value.from, "PPP")
+                                                                        )
+                                                                    ) : (
+                                                                        <span>Pick a date range</span>
+                                                                    )}
+                                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                                </Button>
+
+                                                            </FormControl>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                mode="range"
+                                                                selected={field.value}
+                                                                onSelect={field.onChange}
+                                                                disabled={(date) =>
+                                                                    date > new Date() || date < new Date("1900-01-01")
+                                                                }
+                                                                captionLayout="dropdown"
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <Button className="w-full" type="submit">
+                                            Submit
+                                        </Button>
+                                    </form>
+                                </Form>
+                            </DialogContent>
+                        </Dialog>
+
+                        <Dialog open={open} onOpenChange={setOpen}>
+                         <DialogTrigger asChild>
+                             <Button variant={'default'}>Create Ticket</Button>
+                         </DialogTrigger>
+                         <DialogContent className="max-sm:max-w-4/5 w-full">
+                             <DialogHeader>
+                                 <DialogTitle>Ticket</DialogTitle>
+                                 <DialogDescription>
+                                     Enter the ticket details here. Click save when you&apos;re done.
+                                 </DialogDescription>
+                             </DialogHeader>
+                             <Form {...form}>
+                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                     <FormField
                                         control={form.control}
                                         name="title"
                                         render={({ field }) => (
@@ -742,6 +816,7 @@ export default function Page() {
                             </Form>
                         </DialogContent>
                     </Dialog>
+                    </div>
                 </div>
                 <div className=" w-full rounded-md border">
                     <Table>
