@@ -9,14 +9,14 @@ export async function GET(req:Request, context: { params:Promise<{id:string}> })
     const {id} = await context.params;
     try {
 
-        const admins = await prisma.admin.findMany({
+        const users = await prisma.user.findMany({
             where:{id:parseInt(id)},
             select:{id:true, name:true, email:true}
         })
-        if(!admins){
-            return NextResponse.json({error:"No admins are present!!"},{status:401})
+        if(!users){
+            return NextResponse.json({error:"No Users are present!!"},{status:401})
         }
-        return NextResponse.json(admins, {status:200})
+        return NextResponse.json(users, {status:200})
 
     } catch (error) {
         console.error(error);
@@ -40,15 +40,14 @@ export async function PUT(req:Request, context:{params:Promise<{id:string}>}) {
       dataToUpdate.password = hashedPassword;
     }
 
-    const updatedAdmin = await prisma.admin.update({
+    const updatedUser = await prisma.admin.update({
       where: { id: parseInt(id) },
       data: dataToUpdate,
     });
 
-    // Remove password before sending response
-    const { password: _, ...safeAdmin } = updatedAdmin;
+    const { password: _, ...safeUser } = updatedUser;
 
-    return NextResponse.json(safeAdmin, { status: 200 });
+    return NextResponse.json(safeUser, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

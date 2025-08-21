@@ -6,10 +6,12 @@ export function middleware(request: NextRequest) {
   const isPrivatePathPublic = path.startsWith("/dashboard")
   const isPrivatePathAdmin = path.startsWith("/admin/dashboard");
   const isPrivatePathsuperAdmin = path.startsWith("/superAdmin/dashboard");
+  const isPrivatePathUsers = path.startsWith("/users/dashboard");
 
   const isLoginPath: boolean = path === "/login";
   const isLoginPathAdmin: boolean = path === '/admin';
   const isLoginPathsuperAdmin: boolean = path === '/superAdmin';
+  const isLoginPathUsers: boolean = path === '/users/login';
 
   const token = request.cookies.get("token")?.value || "";
 
@@ -38,6 +40,14 @@ export function middleware(request: NextRequest) {
       });
       return response;
     }
+    else if(isLoginPathUsers){
+      const response = NextResponse.redirect(new URL("/users/login", request.url));
+      response.cookies.set("token", "", {
+        httpOnly: true,
+        expires: new Date(0),
+      });
+      return response;
+    }
   }
 
   // 2. If user is accessing a private path without token → redirect to login
@@ -48,6 +58,9 @@ export function middleware(request: NextRequest) {
   }
   else if(isPrivatePathsuperAdmin && !token){
     return NextResponse.redirect(new URL("/superAdmin", request.url));
+  }
+  else if(isPrivatePathUsers && !token){
+    return NextResponse.redirect(new URL("/users/login", request.url));
   }
 
   // 3. Default allow
@@ -62,10 +75,12 @@ export const config = {
   matcher: [
     '/admin/:path*', 
     '/superAdmin/:path*',
+    '/users/:path*',
     '/dashboard/:path*',
     '/api/:path*',
     '/login',
     '/admin',
-    '/superAdmin'
+    '/superAdmin',
+    '/users',
   ],
 }
