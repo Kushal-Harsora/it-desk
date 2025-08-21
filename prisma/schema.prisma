@@ -36,7 +36,7 @@ model Comment {
   ticketId  Int
 
   author    Technician? @relation(fields: [authorId], references: [id])
-  authorId  Int?
+  authorId  Int
 }
 
 model Technician {

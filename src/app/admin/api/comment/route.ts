@@ -7,14 +7,14 @@ export async function POST(request: NextRequest) {
 
         const { name, email, ticketId, comment } = await request.json();
 
-        console.log(name);
-
         const admin = await prisma.admin.findUnique({
             where: {
                 email: email,
                 name: name
             }
         });
+
+        console.log(admin);
 
         if (!admin) {
             return NextResponse.json({ message: "Admin not found. Kindly login again." }, { status: 404 });

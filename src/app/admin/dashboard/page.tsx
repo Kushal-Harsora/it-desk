@@ -540,7 +540,7 @@ export default function Page() {
             const from = toZonedTime(new Date(data.dateRange.from.toISOString()), timeZone);
             const to = toZonedTime(new Date(data.dateRange.to.toISOString()), timeZone);
 
-            const res = await axios.get(`/api/tickets?start=${from}&end=${to}`);
+            const res = await axios.get(`api/tickets?start=${from}&end=${to}`);
             setTicketData(res.data.tickets);
             setOpenCalendar(false);
         } catch (error) {
@@ -631,26 +631,30 @@ export default function Page() {
                 name: window.localStorage.getItem("name"),
                 ...values
             }
+
+            console.log(formData);
+
             const response: AxiosResponse = await axios.post('api/comment', formData, {
                 headers: {
                     'Content-Type': 'Application/json'
                 }
             });
             const data = response.data;
-            if (response.status === 201) {
-                commentForm.reset();
-                toast.success(data.message || "Added Comment Successfully", {
-                    style: {
-                        "backgroundColor": "#D5F5E3",
-                        "color": "black",
-                        "border": "none"
-                    },
-                    duration: 1500
-                });
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            }
+            console.log("data: ", data);
+            // if (response.status === 201) {
+            //     commentForm.reset();
+            //     toast.success(data.message || "Added Comment Successfully", {
+            //         style: {
+            //             "backgroundColor": "#D5F5E3",
+            //             "color": "black",
+            //             "border": "none"
+            //         },
+            //         duration: 1500
+            //     });
+            //     setTimeout(() => {
+            //         window.location.reload();
+            //     }, 1000);
+            // }
 
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {

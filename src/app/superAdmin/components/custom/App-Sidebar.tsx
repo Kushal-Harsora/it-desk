@@ -23,7 +23,7 @@ import Link from "next/link";
 // Menu items.
 const items = [
   {
-    title: "Home",
+    title: "Tickets",
     url: "/superAdmin/dashboard",
     icon: Home,
   },
@@ -84,7 +84,7 @@ export const AppSidebar = () => {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-2xl mb-4 font-bold">Super-Admin Desk</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-2xl mb-4 font-bold">Super Admin Desk</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col justify-between flex-1 h-full">
             <SidebarMenu>
               {items.map((item) => (
