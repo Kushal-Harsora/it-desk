@@ -317,7 +317,10 @@ export default function Page() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem
-                                onClick={() => navigator.clipboard.writeText(title)}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(title);
+                                    toast.info("Copied Ticket Name to Clipboard!");
+                                }}
                             >
                                 Copy Ticket Name
                             </DropdownMenuItem>
@@ -730,7 +733,7 @@ export default function Page() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="ml-auto max-md:text-xs">
-                                    <SlidersHorizontal /> View 
+                                    <SlidersHorizontal /> View
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">

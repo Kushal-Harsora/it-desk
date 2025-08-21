@@ -24,12 +24,12 @@ import Link from "next/link";
 const items = [
   {
     title: "Home",
-    url: "/admin/dashboard",
+    url: "/technician/dashboard",
     icon: Home,
   },
   {
     title: "Settings",
-    url: "/admin/dashboard/settings",
+    url: "/technician/dashboard/settings",
     icon: Settings,
   },
 ]
@@ -55,7 +55,7 @@ export const AppSidebar = () => {
 
         window.localStorage.removeItem("name");
         window.localStorage.removeItem("email");
-        router.push('/admin');
+        router.push('/technician');
       }
     } catch (error) {
       console.error("Error on Logout", error);

@@ -51,7 +51,7 @@ const Page = () => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
 
         try {
-            const response: AxiosResponse = await axios.post('admin/api/auth/login', values, {
+            const response: AxiosResponse = await axios.post('api/auth/login', values, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -70,7 +70,7 @@ const Page = () => {
                     duration: 1500
                 });
                 form.reset();
-                router.push('/admin/dashboard');
+                router.push('/technician/dashboard');
             }
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {

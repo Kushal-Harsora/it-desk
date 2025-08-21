@@ -7,13 +7,13 @@ export async function POST(request: NextRequest) {
     try {
         const { email, password } = await request.json();
         
-        const user = await prisma.admin.findUnique({
+        const technician = await prisma.technician.findUnique({
             where: {
                 email: email
             }
         });
 
-        if (!user) {
+        if (!technician) {
             return NextResponse.json({
                 message: "Admin not found"
             }, {
@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
             })
         }
 
-        if (user) {
-            const validatePassword = await bcrypt.compare(password, user.password);
+        if (technician) {
+            const validatePassword = await bcrypt.compare(password, technician.password);
             if (!validatePassword) {
                 return NextResponse.json({
                     error: "Invalid Password"
@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
             } else {
 
                 const token = jwt.sign({
-                    email: user.email,
-                    name: user.name,
+                    email: technician.email,
+                    name: technician.name,
                 }, process.env.JWT_SECRET as string, {
                     expiresIn: '1d'
                 });
@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
 
                 const response = NextResponse.json({
                     message: "Login Successful",
-                    name: user.name,
-                    email: user.email
+                    name: technician.name,
+                    email: technician.email
                 }, {
                     status: 200
                 });
@@ -81,7 +81,7 @@ export async function PUT(request: NextRequest) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.admin.create({
+        const user = await prisma.technician.create({
             data: {
                 email: email,
                 name: name,

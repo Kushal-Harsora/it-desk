@@ -4,12 +4,12 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   const isPrivatePathPublic = path.startsWith("/dashboard")
-  const isPrivatePathAdmin = path.startsWith("/admin/dashboard");
+  const isPrivatePathTechnician = path.startsWith("/technician/dashboard");
   const isPrivatePathsuperAdmin = path.startsWith("/superAdmin/dashboard");
   const isPrivatePathUsers = path.startsWith("/users/dashboard");
 
   const isLoginPath: boolean = path === "/login";
-  const isLoginPathAdmin: boolean = path === '/admin';
+  const isLoginPathTechnician: boolean = path === '/technician';
   const isLoginPathsuperAdmin: boolean = path === '/superAdmin';
   const isLoginPathUsers: boolean = path === '/users/login';
 
@@ -24,8 +24,8 @@ export function middleware(request: NextRequest) {
         expires: new Date(0),
       });
       return response;
-    } else if (isLoginPathAdmin) {
-      const response = NextResponse.redirect(new URL("/admin", request.url));
+    } else if (isLoginPathTechnician) {
+      const response = NextResponse.redirect(new URL("/technician", request.url));
       response.cookies.set("token", "", {
         httpOnly: true,
         expires: new Date(0),
@@ -53,8 +53,8 @@ export function middleware(request: NextRequest) {
   // 2. If user is accessing a private path without token → redirect to login
   if (isPrivatePathPublic && !token) {
     return NextResponse.redirect(new URL("/login", request.url));
-  } else if (isPrivatePathAdmin && !token) {
-    return NextResponse.redirect(new URL("/admin", request.url));
+  } else if (isPrivatePathTechnician && !token) {
+    return NextResponse.redirect(new URL("/technician", request.url));
   }
   else if(isPrivatePathsuperAdmin && !token){
     return NextResponse.redirect(new URL("/superAdmin", request.url));
@@ -73,13 +73,13 @@ export function middleware(request: NextRequest) {
 // See "Matching Paths" below to learn more
 export const config = {
   matcher: [
-    '/admin/:path*', 
+    '/technician/:path*', 
     '/superAdmin/:path*',
     '/users/:path*',
     '/dashboard/:path*',
     '/api/:path*',
     '/login',
-    '/admin',
+    '/technician',
     '/superAdmin',
     '/users',
   ],
