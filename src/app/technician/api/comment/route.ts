@@ -7,24 +7,22 @@ export async function POST(request: NextRequest) {
 
         const { name, email, ticketId, comment } = await request.json();
 
-        const admin = await prisma.technician.findUnique({
+        const technician = await prisma.technician.findUnique({
             where: {
                 email: email,
                 name: name
             }
         });
 
-        console.log(admin);
-
-        if (!admin) {
-            return NextResponse.json({ message: "Admin not found. Kindly login again." }, { status: 404 });
+        if (!technician) {
+            return NextResponse.json({ message: "Technician not found. Kindly login again." }, { status: 404 });
         }
 
         const createdComment = await prisma.comment.create({
             data: {
                 ticketId: ticketId,
                 message: comment,
-                authorTechId: admin.id,
+                authorTechId: technician.id,
                 createdAt: new Date()
             }
         });
@@ -34,6 +32,7 @@ export async function POST(request: NextRequest) {
                 id: ticketId
             }, 
             data: {
+                technicianId: technician.id,
                 updatedAt: new Date()
             }
         });

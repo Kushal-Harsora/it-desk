@@ -8,15 +8,15 @@ export async function PUT(request: NextRequest) {
 
         const { name, email, ticketId, status } = await request.json() as { name: string, email: string, ticketId: number, status: string };
 
-        const admin = await prisma.technician.findUnique({
+        const technician = await prisma.technician.findUnique({
             where: {
                 email: email,
                 name: name
             }
         });
 
-        if (!admin) {
-            return NextResponse.json({ message: "Admin not found. Kindly login again." }, { status: 404 });
+        if (!technician) {
+            return NextResponse.json({ message: "Technician not found. Kindly login again." }, { status: 404 });
         }
 
         const updateStatus = await prisma.ticket.update({
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest) {
             data: {
                 status: Status[status as keyof typeof Status],
                 updatedAt: new Date(),
-                technicianId: admin.id
+                technicianId: technician.id
             }
         });
 
