@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       SELECT DATE(createdAt) AS date, status, COUNT(*) AS count
       FROM Ticket
       WHERE createdAt >= CURDATE() - INTERVAL 90 DAY
-        AND technicianId = ?
+        AND userId = ?
       GROUP BY DATE(createdAt), status
     ) t
       ON d.date = t.date AND s.status = t.status
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
       SELECT DATE(createdAt) AS date, priority, COUNT(*) AS count
       FROM Ticket
       WHERE createdAt >= CURDATE() - INTERVAL 90 DAY
-        AND technicianId = ?
+        AND userId = ?
       GROUP BY DATE(createdAt), priority
     ) t
       ON d.date = t.date AND p.priority = t.priority

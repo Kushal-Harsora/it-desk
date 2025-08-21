@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
         const { name, email, ticketId, comment } = await request.json();
 
-        const admin = await prisma.admin.findUnique({
+        const admin = await prisma.technician.findUnique({
             where: {
                 email: email,
                 name: name
@@ -24,15 +24,24 @@ export async function POST(request: NextRequest) {
             data: {
                 ticketId: ticketId,
                 message: comment,
-                authorId: admin.id,
+                authorTechId: admin.id,
                 createdAt: new Date()
             }
         });
 
-        if (!createdComment) {
-            return NextResponse.json({ message: "Some error creating comment" }, { status: 401 });
-        } else {
+        const updatedTicket = await prisma.ticket.update({
+            where: {
+                id: ticketId
+            }, 
+            data: {
+                updatedAt: new Date()
+            }
+        });
+
+        if (createdComment && updatedTicket) {
             return NextResponse.json({ message: "Added Comment Successfully" }, { status: 201 });
+        } else {
+            return NextResponse.json({ message: "Some error creating comment" }, { status: 401 });
         }
 
     } catch (error) {

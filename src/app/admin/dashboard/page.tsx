@@ -641,20 +641,20 @@ export default function Page() {
             });
             const data = response.data;
             console.log("data: ", data);
-            // if (response.status === 201) {
-            //     commentForm.reset();
-            //     toast.success(data.message || "Added Comment Successfully", {
-            //         style: {
-            //             "backgroundColor": "#D5F5E3",
-            //             "color": "black",
-            //             "border": "none"
-            //         },
-            //         duration: 1500
-            //     });
-            //     setTimeout(() => {
-            //         window.location.reload();
-            //     }, 1000);
-            // }
+            if (response.status === 201) {
+                commentForm.reset();
+                toast.success(data.message || "Added Comment Successfully", {
+                    style: {
+                        "backgroundColor": "#D5F5E3",
+                        "color": "black",
+                        "border": "none"
+                    },
+                    duration: 1500
+                });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
 
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import jwt from "jsonwebtoken";
-import { email } from "zod";
 import { Priority } from '@prisma/client';
 import { parseForm } from '@/utils/parseForm';
 import fs from 'fs';
