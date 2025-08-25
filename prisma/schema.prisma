@@ -27,6 +27,8 @@ model Ticket {
   technicianId Int?
   user        User?        @relation("UserTickets", fields: [userId], references: [id])
   userId      Int? 
+  companyId String?
+  company   Company?  @relation(fields: [companyId], references: [id])
 }
 
 model Comment {
@@ -48,12 +50,26 @@ model User {
   name      String
   email     String    @unique
   password  String
+  phoneNumber String? 
+
   createdAt DateTime  @default(now())
   tickets   Ticket[]  @relation("UserTickets")   // Tickets created by user
   comments  Comment[] @relation("UserComments")  // Comments written by user
+  companyId String?
+  company   Company?  @relation(fields: [companyId], references: [id])
   role      String @default("User")
 }
 
+model Company {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subdomain   String   @unique
+  code        String   @unique
+  users       User[]
+  tickets     Ticket[]
+  createdAt   DateTime @default(now())
+  
+}
 
 model Technician {
   id        Int        @id @default(autoincrement())

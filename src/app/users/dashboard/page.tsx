@@ -428,7 +428,7 @@ export default function Page() {
                 if (response_ticket.status === 200) {
                     setTicketData(response_ticket.data.tickets);
                 }
-                
+
                 const response_chart: AxiosResponse = await axios.get(`/api/user/chart?name=${name}&email=${email}`);
                 if (response_chart.status === 200) {
                     setStatus(response_chart.data.status);
@@ -451,8 +451,7 @@ export default function Page() {
                             duration: 2500
                         })
                     } else if (status === 404) {
-                        console.log("Hererere!!!!!!!!!!")
-                        toast.error(data.error || "Technician not found. Kindly Login Again.", {
+                        toast.error(data.error || "User not found. Kindly Login Again.", {
                             style: {
                                 "backgroundColor": "#FADBD8",
                                 "color": "black",
@@ -722,100 +721,100 @@ export default function Page() {
                         </Dialog>
 
                         <Dialog open={open} onOpenChange={setOpen}>
-                         <DialogTrigger asChild>
-                             <Button variant={'default'}>Create Ticket</Button>
-                         </DialogTrigger>
-                         <DialogContent className="max-sm:max-w-4/5 w-full">
-                             <DialogHeader>
-                                 <DialogTitle>Ticket</DialogTitle>
-                                 <DialogDescription>
-                                     Enter the ticket details here. Click save when you&apos;re done.
-                                 </DialogDescription>
-                             </DialogHeader>
-                             <Form {...form}>
-                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                     <FormField
-                                        control={form.control}
-                                        name="title"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ticket Title</FormLabel>
-                                                <FormControl>
-                                                    <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="description"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ticket Description</FormLabel>
-                                                <FormControl>
-                                                    <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="attachment"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Attach PDF/Image</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="file"
-                                                        accept=".png,.jpg,.jpeg,.pdf"
+                            <DialogTrigger asChild>
+                                <Button variant={'default'}>Create Ticket</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-sm:max-w-4/5 w-full">
+                                <DialogHeader>
+                                    <DialogTitle>Ticket</DialogTitle>
+                                    <DialogDescription>
+                                        Enter the ticket details here. Click save when you&apos;re done.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="title"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Ticket Title</FormLabel>
+                                                    <FormControl>
+                                                        <Input className='placeholder:text-gray-800 border-black' placeholder="Ticket Title" type='text' {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="description"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Ticket Description</FormLabel>
+                                                    <FormControl>
+                                                        <Textarea className="min-h-[100px] max-h-[400px] overflow-auto" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="attachment"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Attach PDF/Image</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="file"
+                                                            accept=".png,.jpg,.jpeg,.pdf"
 
-                                                        onChange={e => {
-                                                            const file = e.target.files?.[0];
-                                                            field.onChange(file);
-                                                        }}
-                                                        onBlur={field.onBlur}
-                                                        name={field.name}
-                                                        ref={field.ref}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="priority"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Priority</FormLabel>
-                                                <FormControl>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select ticket priority" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                <SelectLabel>Ticket Priority</SelectLabel>
-                                                                <SelectItem value="HIGH">High</SelectItem>
-                                                                <SelectItem value="MEDIUM">Medium</SelectItem>
-                                                                <SelectItem value="LOW">Low</SelectItem>
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <DialogFooter>
-                                        <Button type="submit">Create Ticket</Button>
-                                    </DialogFooter>
-                                </form>
-                            </Form>
-                        </DialogContent>
-                    </Dialog>
+                                                            onChange={e => {
+                                                                const file = e.target.files?.[0];
+                                                                field.onChange(file);
+                                                            }}
+                                                            onBlur={field.onBlur}
+                                                            name={field.name}
+                                                            ref={field.ref}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="priority"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Priority</FormLabel>
+                                                    <FormControl>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder="Select ticket priority" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectGroup>
+                                                                    <SelectLabel>Ticket Priority</SelectLabel>
+                                                                    <SelectItem value="HIGH">High</SelectItem>
+                                                                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                                                                    <SelectItem value="LOW">Low</SelectItem>
+                                                                </SelectGroup>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <DialogFooter>
+                                            <Button type="submit">Create Ticket</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </Form>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
                 <div className=" w-full rounded-md border">
