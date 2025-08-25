@@ -9,95 +9,94 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql" 
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model Ticket {
-  id          Int         @id @default(autoincrement())
-  title       String
-  description String
-  priority    Priority
-  status      Status      @default(OPEN)
-  attachment  String?     
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  comments    Comment[]   
-  technician  Technician? @relation(fields: [technicianId], references: [id])
+  id           Int         @id @default(autoincrement())
+  title        String
+  description  String
+  priority     Priority
+  status       Status      @default(OPEN)
+  attachment   String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  comments     Comment[]
+  technician   Technician? @relation(fields: [technicianId], references: [id])
   technicianId Int?
-  user        User?        @relation("UserTickets", fields: [userId], references: [id])
-  userId      Int? 
-  companyId String?
-  company   Company?  @relation(fields: [companyId], references: [id])
+  user         User?       @relation("UserTickets", fields: [userId], references: [id])
+  userId       Int?
+  companyId    String?
+  company      Company?    @relation(fields: [companyId], references: [id])
 }
 
 model Comment {
   id        Int      @id @default(autoincrement())
   message   String
   createdAt DateTime @default(now())
-  
-  ticket    Ticket   @relation(fields: [ticketId], references: [id])
-  ticketId  Int
 
-  authorTech Technician? @relation(fields: [authorTechId], references: [id])
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  ticketId Int
+
+  authorTech   Technician? @relation(fields: [authorTechId], references: [id])
   authorTechId Int?
-  authorUser  User?      @relation("UserComments", fields: [authorUserId], references: [id])
-  authorUserId  Int? 
+  authorUser   User?       @relation("UserComments", fields: [authorUserId], references: [id])
+  authorUserId Int?
 }
 
 model User {
+  id          Int     @id @default(autoincrement())
+  name        String
+  email       String  @unique
+  password    String
+  phoneNumber String?
+
+  createdAt DateTime  @default(now())
+  tickets   Ticket[]  @relation("UserTickets") // Tickets created by user
+  comments  Comment[] @relation("UserComments") // Comments written by user
+  companyId String?
+  company   Company?  @relation(fields: [companyId], references: [id])
+  role      String    @default("User")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  subdomain String   @unique
+  code      String   @unique
+  users     User[]
+  tickets   Ticket[]
+  createdAt DateTime @default(now())
+}
+
+model Technician {
   id        Int       @id @default(autoincrement())
   name      String
   email     String    @unique
   password  String
-  phoneNumber String? 
-
   createdAt DateTime  @default(now())
-  tickets   Ticket[]  @relation("UserTickets")   // Tickets created by user
-  comments  Comment[] @relation("UserComments")  // Comments written by user
-  companyId String?
-  company   Company?  @relation(fields: [companyId], references: [id])
-  role      String @default("User")
-}
-
-model Company {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  subdomain   String   @unique
-  code        String   @unique
-  users       User[]
-  tickets     Ticket[]
-  createdAt   DateTime @default(now())
-  
-}
-
-model Technician {
-  id        Int        @id @default(autoincrement())
-  name      String
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
   comments  Comment[]
   tickets   Ticket[]
-  role      String @default("Technician")
+  role      String    @default("Technician")
 }
 
 model Admin {
-  id        Int        @id @default(autoincrement())
-  name      String
-  email     String     @unique
-  password  String
-  createdAt DateTime @default(now())
-  role      String @default("Admin")
-}
-
-model Superadmin  {
-  id        Int @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
-  role      String @default("Superadmin")
+  role      String   @default("Admin")
+}
+
+model Superadmin {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  role      String   @default("Superadmin")
 }
 
 enum Role {
@@ -114,13 +113,9 @@ enum Priority {
   HIGH
 }
 
-
-
 enum Status {
   OPEN
   IN_PROGRESS
   RESOLVED
   CLOSED
 }
-
-
