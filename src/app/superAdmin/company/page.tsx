@@ -161,25 +161,6 @@ const CompanyPage = () => {
     }
 
     const columns: ColumnDef<Company>[] = [
-
-        {
-            accessorKey: "id",
-            // header: () => <div className="text-left">Admin-Id</div>,
-            header: ({ column }) => {
-                return (
-                    <div className="w-fit">
-                        <Button
-                            className="w-fit text-center"
-                            variant="ghost"
-                            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                        >
-                            Id
-                            <ArrowUpDown />
-                        </Button>
-                    </div>
-                )
-            },
-        },
         {
             accessorKey: "name",
             header: () => <div className="text-left">Name</div>,
