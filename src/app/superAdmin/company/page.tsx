@@ -86,6 +86,15 @@ const addCompanySchema = z.object({
 
 
 const CompanyPage = () => {
+
+    const form = useForm<z.infer<typeof addCompanySchema>>({
+        resolver: zodResolver(addCompanySchema),
+        defaultValues: {
+            name: "",
+            subdomain: ""
+        }
+    })
+
     const [companies, setCompanies] = React.useState<Company[]>([]);
     const [loading, setLoading] = React.useState<boolean>(true);
     const [sorting, setSorting] = React.useState<SortingState>([])
@@ -121,22 +130,15 @@ const CompanyPage = () => {
         getData();
     }, []);
 
-    const form = useForm<z.infer<typeof addCompanySchema>>({
-        resolver: zodResolver(addCompanySchema),
-        defaultValues: {
-            name: "",
-            subdomain: ""
-        },
-    })
-
     const handleAdd = async (values: z.infer<typeof addCompanySchema>) => {
         try {
             const response: AxiosResponse = await axios.post("/api/superAdmin/company", values, { withCredentials: true });
             const new_admin = response.data
 
-            setCompanies((prev) => [...prev, new_admin])
-
+            setCompanies((prev) => [...prev, new_admin]);
             if (response.status == 201) {
+                form.reset();
+                setAdd(false);
                 toast.success("Successfully Registered New Company",
                     {
                         style: {
@@ -150,12 +152,15 @@ const CompanyPage = () => {
             }
 
         } catch (error) {
-            toast.error("Failed to register new company!!",
-                {
-                    style: { backgroundColor: "#c1121f", color: "white" },
-                    duration: 1500
-                }
-            )
+            toast.error("Error while adding new company!!", {
+                style: {
+                    "backgroundColor": "#FADBD8",
+                    "color": "black",
+                    "border": "none"
+                },
+                duration: 2500
+            });
+            form.reset();
             console.log("Error while adding new company!!", error)
         }
     }

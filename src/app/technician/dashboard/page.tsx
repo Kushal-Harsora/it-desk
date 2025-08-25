@@ -22,7 +22,7 @@ import { format, toZonedTime } from 'date-fns-tz'
 import axios, { AxiosResponse } from "axios"
 
 
-// Component imports
+// UI Component imports
 import {
     Dialog,
     DialogClose,
@@ -79,7 +79,7 @@ import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { ChartArea } from "@/components/custom/Chart-Area"
 
-// Icon, Style and consts imports
+// Icon and Style imports
 import { ArrowUpDown, CalendarIcon, MoreHorizontal, SlidersHorizontal } from "lucide-react"
 import { PriorityGrouped, StatusGrouped, timeZone } from '@/const/constVal'
 
@@ -634,8 +634,6 @@ export default function Page() {
                 name: window.localStorage.getItem("name"),
                 ...values
             }
-
-            console.log(formData);
 
             const response: AxiosResponse = await axios.post('api/comment', formData, {
                 headers: {

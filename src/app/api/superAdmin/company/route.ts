@@ -7,24 +7,19 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const { name, subdomain } = body;
+        const { name, subdomain }: { name: string, subdomain: string } = body;
         if (!name || !subdomain) {
             return NextResponse.json({ error: "Missing fields!!" }, { status: 400 })
         }
 
-        const lastCompany = await prisma.company.findFirst({
-            orderBy: { createdAt: "desc" }
-        })
-
-        let newCode: string;
-        if (lastCompany) {
-            const lastNumeric = parseInt(lastCompany.code.split("-")[1])
-            newCode = `${name.charAt(0).toUpperCase()}-${String(lastNumeric + 1).padStart(3, "0")}`;
+        const newName: string = name.replace(/\s+/g, '');
+        let newCode: string = "";
+        if (newName.length > 3) {
+            newCode = `${newName.substring(0, 3).toUpperCase()}`;
+        } else {
+            newCode = newName;
         }
-        else {
-            newCode = `${name.charAt(0).toUpperCase()}-001`;
-        }
-
+    
         const company = await prisma.company.create({
             data: {
                 name,
@@ -35,7 +30,7 @@ export async function POST(req: Request) {
         return NextResponse.json(company, { status: 201 })
     } catch (error) {
         console.log("Some error ocurred while adding a new company!!", error)
-        return NextResponse.json({ error: "Error at company POST!!" }, { status: 400 })
+        return NextResponse.json({ error: "Error at company POST!!" }, { status: 500 })
     }
 
 }

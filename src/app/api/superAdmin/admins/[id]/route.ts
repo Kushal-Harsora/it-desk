@@ -1,32 +1,32 @@
 import { NextResponse } from "next/server";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-export async function GET(req:Request, context: { params:Promise<{id:string}> }) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
 
-    const {id} = await context.params;
-    try {
+  const { id } = await context.params;
+  try {
 
-        const admins = await prisma.admin.findMany({
-            where:{id:parseInt(id)},
-            select:{id:true, name:true, email:true}
-        })
-        if(!admins){
-            return NextResponse.json({error:"No admins are present!!"},{status:401})
-        }
-        return NextResponse.json(admins, {status:200})
-
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const admins = await prisma.admin.findMany({
+      where: { id: parseInt(id) },
+      select: { id: true, name: true, email: true }
+    })
+    if (!admins) {
+      return NextResponse.json({ error: "No admins are present!!" }, { status: 401 })
     }
-    
+    return NextResponse.json(admins, { status: 200 })
+
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+
 }
 
-export async function PUT(req:Request, context:{params:Promise<{id:string}>}) {
-    const { id } = await context.params;
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const body = await req.json();
   const { name, email, password } = body;
 
@@ -35,7 +35,7 @@ export async function PUT(req:Request, context:{params:Promise<{id:string}>}) {
 
     if (name) dataToUpdate.name = name;
     if (email) dataToUpdate.email = email;
-    if (password) {
+    if (password && password.length != "") {
       const hashedPassword = await bcrypt.hash(password, 10);
       dataToUpdate.password = hashedPassword;
     }
@@ -60,12 +60,9 @@ export async function PUT(req:Request, context:{params:Promise<{id:string}>}) {
 }
 
 export async function DELETE(
-  req: Request,
   context: { params: { id: string } }
 ) {
-  const { id } = context.params; 
-
-  
+  const { id } = context.params;
 
   try {
     const deletedAdmin = await prisma.admin.delete({

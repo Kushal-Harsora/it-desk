@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { Prisma, PrismaClient } from "@prisma/client";
-import { error } from "console";
-import { AwardIcon } from "lucide-react";
-import { email } from "zod";
+import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
@@ -38,7 +35,7 @@ export async function POST(req: Request) {
     const hashedPass = await bcrypt.hash(password, 10)
 
     const newAdmin = await prisma.admin.create({
-      data: { name, email, password: hashedPass }
+      data: { name, email, password: hashedPass, createdAt: new Date() }
     })
 
     // don't return password in response
