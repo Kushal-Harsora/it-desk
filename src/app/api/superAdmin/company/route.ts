@@ -1,11 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { error } from "console";
 import { NextResponse } from "next/server"
-import { string, success } from "zod";
 
 const prisma = new PrismaClient();
-export async function POST(req: Request) {
 
+export async function POST(req: Request) {
     try {
         const body = await req.json();
 
@@ -42,10 +40,8 @@ export async function POST(req: Request) {
 
 }
 
-export async function GET(req: Request) {
-
+export async function GET() {
     try {
-
         const companies = await prisma.company.findMany({
             select: {
                 id: true,
@@ -65,6 +61,7 @@ export async function GET(req: Request) {
             id: company.id,
             name: company.name,
             subdomain: company.subdomain,
+            createdAt: company.createdAt,
             users: company._count.users,
             tickets: company._count.tickets,
         }));

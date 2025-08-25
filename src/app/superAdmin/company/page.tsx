@@ -1,4 +1,14 @@
 "use client";
+
+// System Component Imports
+import React from "react"
+import axios, { AxiosResponse } from "axios"
+import { format, toZonedTime } from 'date-fns-tz'
+import z from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+// UI Component Imports
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -12,13 +22,6 @@ import {
     useReactTable,
 } from "@tanstack/react-table"
 import { toast } from "sonner"
-
-import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuTrigger,
-} from "@/components/ui/context-menu"
 import {
     Table,
     TableBody,
@@ -27,10 +30,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-
-import { format, toZonedTime } from 'date-fns-tz'
-import axios, { AxiosResponse } from "axios"
-import { useState, useEffect, useRef, use } from "react";
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -39,12 +38,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-    DropdownMenuItem
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { ArrowUpDown, CalendarIcon, MoreHorizontal, SlidersHorizontal } from "lucide-react"
-import { timeZone } from '@/const/constVal'
-
 import {
     Dialog,
     DialogContent,
@@ -53,9 +47,15 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
 import {
     Select,
@@ -64,26 +64,45 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Admin, Company } from "@prisma/client";
+import { Input } from "@/components/ui/input"
+
+// Consts and Icons Imports
+import { ArrowUpDown, MoreHorizontal, SlidersHorizontal } from "lucide-react"
+import { timeZone } from '@/const/constVal'
+
+// Database Helper Imports
+import { Company } from "@prisma/client"
 
 
-export default function Page() {
-    const [companies, setCompanies] = useState<Company[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [sorting, setSorting] = useState<SortingState>([])
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+// Schema for adding a new company
+const addCompanySchema = z.object({
+    name: z.string().min(1, {
+        message: "Name Required!"
+    }),
+    subdomain: z.string().min(2, {
+        message: "Sub-Domain Required!"
+    })
+});
+
+
+const CompanyPage = () => {
+    const [companies, setCompanies] = React.useState<Company[]>([]);
+    const [loading, setLoading] = React.useState<boolean>(true);
+    const [sorting, setSorting] = React.useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
     )
     const [columnVisibility, setColumnVisibility] =
-        useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = useState({})
-    const [pagination, setPagination] = useState({
+        React.useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = React.useState({})
+    const [pagination, setPagination] = React.useState({
         pageIndex: 0,
         pageSize: 5,
     });
 
-    const [add, setAdd] = useState(false)
-    useEffect(() => {
+    const [add, setAdd] = React.useState<boolean>(false);
+
+    React.useEffect(() => {
         const getData = async () => {
             try {
                 const response = await axios.get('/api/superAdmin/company', { withCredentials: true });
@@ -102,47 +121,44 @@ export default function Page() {
         getData();
     }, []);
 
-    const [companyForm, setCompanyForm] = useState({ name: "", subdomain: "", password: "" })
-                const handleAddChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                    e.preventDefault()
-                    const { name, value } = e.target
-                    setCompanyForm((prev) => ({ ...prev, [name]: value }))
+    const form = useForm<z.infer<typeof addCompanySchema>>({
+        resolver: zodResolver(addCompanySchema),
+        defaultValues: {
+            name: "",
+            subdomain: ""
+        },
+    })
+
+    const handleAdd = async (values: z.infer<typeof addCompanySchema>) => {
+        try {
+            const response: AxiosResponse = await axios.post("/api/superAdmin/company", values, { withCredentials: true });
+            const new_admin = response.data
+
+            setCompanies((prev) => [...prev, new_admin])
+
+            if (response.status == 201) {
+                toast.success("Successfully Registered New Company",
+                    {
+                        style: {
+                            "backgroundColor": "#D5F5E3",
+                            "color": "black",
+                            "border": "none"
+                        },
+                        duration: 1500
+                    })
+
+            }
+
+        } catch (error) {
+            toast.error("Failed to register new company!!",
+                {
+                    style: { backgroundColor: "#c1121f", color: "white" },
+                    duration: 1500
                 }
-    const handleAdd = async () => {
-                    try {
-                        const response = await axios.post("/api/superAdmin/company"
-                            , {
-                                name: companyForm.name,
-                                subdomain:companyForm.subdomain,
-
-                            }
-                            , { withCredentials: true })
-                        const new_admin = response.data
-                        setCompanies((prev) => [...prev, new_admin])
-
-                        if(response.status==201){
-                            toast.success("Successfully Registered New Company",
-                                {
-                                style: {
-                                    "backgroundColor": "#D5F5E3",
-                                    "color": "black",
-                                    "border": "none"
-                                },
-                                duration: 1500
-                            })
-                            
-                        }
-
-                    } catch (error) {
-                        toast.error("Failed to register new company!!",
-                            {
-                                style: { backgroundColor: "#c1121f", color: "white" },
-                                duration:1500
-                            }
-                        )
-                        console.log("Error while adding new company!!", error)
-                    }
-                }
+            )
+            console.log("Error while adding new company!!", error)
+        }
+    }
 
     const columns: ColumnDef<Company>[] = [
 
@@ -202,23 +218,12 @@ export default function Page() {
                 return <div className='font-medium text-center'>{formattedDate}</div>
             },
         },
-        
+
         {
             id: "actions",
             enableHiding: false,
-            cell: ({ row }) => {
-                const row_data = row.original;
-                const createdAt = new Date(row_data.createdAt);
-                const formattedDate = new Intl.DateTimeFormat('en-IN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    timeZone: 'Asia/Kolkata',
-                }).format(createdAt);
-                
-
+            cell: () => {
                 return (
-
                     <main>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -230,12 +235,8 @@ export default function Page() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-
-                                
-                                
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        
                     </main>
                 )
 
@@ -275,8 +276,6 @@ export default function Page() {
             <div className="w-full h-full px-[2.5vw] flex flex-col items-center justify-center gap-2">
                 <div className="h-fit w-full flex max-md:flex-col justify-evenly items-center gap-2 py-4">
                     <div className="w-full max-md:w-fit flex max-md:flex-row justify-between items-center gap-2.5">
-
-
                         <span className="max-md:text-xs text-center px-6 max-md:px-0 w-full">
                             Total Companies - <strong>{companies.length}</strong>
                         </span>
@@ -316,43 +315,63 @@ export default function Page() {
                                     })}
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button variant={'success'} onClick={() => setAdd(true)}>Register Company</Button>
+                        <Button
+                            variant={'success'}
+                            onClick={() => setAdd(true)}
+                        >
+                            Register Company
+                        </Button>
                         <Dialog open={add} onOpenChange={setAdd}>
                             <DialogContent>
-                                <form onSubmit={handleAdd}>
-                                    <DialogTrigger asChild>
-                                    </DialogTrigger>
-                                    <DialogHeader>
-                                        <DialogTitle>Register New Company</DialogTitle>
-                                        <DialogDescription className="mb-3">
-                                            Click register when you&apos;re
-                                            done.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4">
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="name-1">Name</Label>
-                                            <input value={companyForm.name} name="name"
-                                                onChange={handleAddChange}
-
-                                            />
-                                        </div>
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="username-1">SubDomain</Label>
-                                            <input
-                                                placeholder="Enter a subdomain of company.."
-                                                value={companyForm.subdomain} name="subdomain"
-                                                onChange={handleAddChange}
-                                            />
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button variant="outline">Cancel</Button>
-                                        </DialogClose>
-                                        <Button type="submit">Register</Button>
-                                    </DialogFooter>
-                                </form>
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4">
+                                        <DialogHeader>
+                                            <DialogTitle>Register New Company</DialogTitle>
+                                            <DialogDescription className="mb-3">
+                                                Click register when you&apos;re
+                                                done.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Name</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="enter name of company"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="subdomain"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Sub Domain</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="enter subdomain of company"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button variant="outline">Cancel</Button>
+                                            </DialogClose>
+                                            <Button type="submit">Register</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </Form>
                             </DialogContent>
                         </Dialog>
                     </div>
@@ -464,3 +483,5 @@ export default function Page() {
         </main>
     );
 }
+
+export default CompanyPage
