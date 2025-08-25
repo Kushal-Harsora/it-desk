@@ -30,9 +30,10 @@ import { toast } from 'sonner'
 
 
 const formSchema = z.object({
-    name:z.string(),
+    name: z.string(),
     email: z.email(),
-    password: z.string()
+    password: z.string(),
+    number: z.string(),
 });
 
 const Page = () => {
@@ -42,9 +43,10 @@ const Page = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name:"",
+            name: "",
             email: "",
-            password: ""
+            password: "",
+            number: "",
         },
     });
 
@@ -85,7 +87,7 @@ const Page = () => {
                         duration: 2500
                     })
                     form.resetField('password');
-                }  else {
+                } else {
                     toast.error(data.error || "Some Error Occured", {
                         style: {
                             "backgroundColor": "#FADBD8",
@@ -153,6 +155,22 @@ const Page = () => {
                                                 <FormLabel>Password</FormLabel>
                                                 <FormControl>
                                                     <Input className='placeholder:text-gray-800 border-black' placeholder="password" type='password' {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="number"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Phone Number</FormLabel>
+                                                <FormControl>
+                                                    <Input className='placeholder:text-gray-800 border-black' placeholder="enter mobile number" type='text' {...field}
+                                                        pattern="[0-9]{10}"
+                                                        maxLength={10} 
+                                                        required />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

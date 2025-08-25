@@ -37,6 +37,11 @@ const items = [
     url:"/superAdmin/technicians",
     icon: Wrench,
   }, 
+ {
+    title: "Companies",
+    url:"/superAdmin/company",
+    icon: Wrench,
+  }, 
   {
     title: "Settings",
     url: "/admin/dashboard/settings",
